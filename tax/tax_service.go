@@ -51,10 +51,6 @@ func (t *TaxService) calculateTax(incomeDetail *TaxRequest) (float64, error) {
 	wht := incomeDetail.WHT
 	
 	var taxAmount float64
-	brackets, err := getTaxTable()
-	if err != nil {
-		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
-	}
 
 	// Log the income for calculation
 	t.logger.Debug().Msgf("Calculating tax for income: %.2f", income)
@@ -71,36 +67,125 @@ func (t *TaxService) calculateTax(incomeDetail *TaxRequest) (float64, error) {
 	}
 	t.logger.Debug().Msgf("Taxed income (%.2f) after deductAllowance", taxedIncome)
 
-	for _, bracket := range brackets {
-		// Log processing of each bracket
-		t.logger.Debug().Msgf("Processing bracket: %+v", bracket)
+	// for _, bracket := range brackets {
+	// 	// Log processing of each bracket
+	// 	t.logger.Debug().Msgf("Processing bracket: %+v", bracket)
 
-		if taxedIncome <= bracket.UpperBound || bracket.UpperBound == 0 {
-			// Log when taxed income is within the bracket upper bound
-			t.logger.Debug().Msgf("Taxed income (%.2f) is within the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
+	// 	if taxedIncome <= bracket.UpperBound || bracket.UpperBound == 0 {
+	// 		// Log when taxed income is within the bracket upper bound
+	// 		t.logger.Debug().Msgf("Taxed income (%.2f) is within the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
 
-			taxableAmount := taxedIncome - adjustLowerBound(bracket.LowerBound-1)
-			if taxableAmount > 0 {
-				// Log taxable amount and tax amount after applying rate
-				t.logger.Debug().Msgf("Taxable amount: %.2f", taxableAmount)
-				taxAmount += taxableAmount * bracket.TaxRate
-				t.logger.Debug().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
-			}
-			break
-		} else {
-			// Log when taxed income exceeds the bracket upper bound
-			t.logger.Debug().Msgf("Taxed income (%.2f) exceeds the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
+	// 		taxableAmount := taxedIncome - adjustLowerBound(bracket.LowerBound-1)
+	// 		if taxableAmount > 0 {
+	// 			// Log taxable amount and tax amount after applying rate
+	// 			t.logger.Debug().Msgf("Taxable amount: %.2f", taxableAmount)
+	// 			taxAmount += taxableAmount * bracket.TaxRate
+	// 			t.logger.Debug().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
+	// 		}
+	// 		break
+	// 	} else {
+	// 		// Log when taxed income exceeds the bracket upper bound
+	// 		t.logger.Debug().Msgf("Taxed income (%.2f) exceeds the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
 
-			taxableAmount := bracket.UpperBound - adjustLowerBound(bracket.LowerBound-1)
-			t.logger.Debug().Msgf("Taxable amount: %.2f", taxableAmount)
-			taxAmount += taxableAmount * bracket.TaxRate
-			t.logger.Debug().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
-		}
+	// 		taxableAmount := bracket.UpperBound - adjustLowerBound(bracket.LowerBound-1)
+	// 		t.logger.Debug().Msgf("Taxable amount: %.2f", taxableAmount)
+	// 		taxAmount += taxableAmount * bracket.TaxRate
+	// 		t.logger.Debug().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
+	// 	}
+	// }
+
+	// for _, bracket := range brackets {
+
+	// 	t.logger.Debug().Msgf("Processing bracket: %+v", bracket)
+
+	// 	// Calculate taxable amount based on bracket boundaries
+	// 	taxableAmount := min(taxedIncome, bracket.UpperBound) - bracket.LowerBound + 1
+
+	// 	// If taxable amount is positive, calculate tax amount and append to tax levels
+	// 	if taxableAmount > 0 {
+	// 		taxAmount = taxableAmount * bracket.TaxRate
+	// 	}
+
+	// 	// If taxed income is within the bracket, break the loop
+	// 	if taxedIncome <= bracket.UpperBound {
+	// 		break
+	// 	}
+	// }
+
+	taxAmount , err = t.calculateWithTaxTable(taxedIncome)
+	if err != nil {
+		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
+
 
 	taxAmount = deductWht(taxAmount,wht)
 	return taxAmount, nil
 }
+
+func (t *TaxService) calculateWithTaxTable(taxedIncome float64)(float64,error){
+	
+	brackets, err := getTaxTable()
+	if err != nil {
+		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
+	}
+
+	var taxAmount float64
+
+	for _, bracket := range brackets {
+		t.logger.Debug().Msgf("Processing bracket: %+v", bracket)
+
+		// Calculate taxable amount based on bracket boundaries
+		taxableAmount := min(taxedIncome, bracket.UpperBound) - bracket.LowerBound + 1
+
+		// If taxable amount is positive, calculate tax amount and append to tax levels
+		if taxableAmount > 0 {
+			taxAmount = taxableAmount * bracket.TaxRate
+		}
+
+		// If taxed income is within the bracket, break the loop
+		if taxedIncome <= bracket.UpperBound {
+			break
+		}
+	}
+	return taxAmount,nil
+}
+
+
+// func CalculateTaxLevels(brackets []TaxBracket, taxedIncome float64) TaxLevels {
+// 	var taxLevels TaxLevels
+
+// 	// Iterate over each tax bracket
+// 	for _, bracket := range brackets {
+// 		var taxAmount float64
+
+// 		// Calculate taxable amount based on bracket boundaries
+// 		taxableAmount := min(taxedIncome, bracket.UpperBound) - bracket.LowerBound + 1
+
+// 		// If taxable amount is positive, calculate tax amount and append to tax levels
+// 		if taxableAmount > 0 {
+// 			taxAmount = taxableAmount * bracket.TaxRate
+// 		}
+
+// 		// Append tax level to tax levels
+// 		taxLevels = append(taxLevels, struct {
+// 			Level string  `json:"level"`
+// 			Tax   float64 `json:"tax"`
+// 		}{
+// 			Level: fmt.Sprintf("%.0f-%.0f", bracket.LowerBound, bracket.UpperBound),
+// 			Tax:   taxAmount,
+// 		})
+
+// 		// If taxed income is within the bracket, break the loop
+// 		if taxedIncome <= bracket.UpperBound {
+// 			break
+// 		}
+// 	}
+
+// 	return taxLevels
+// }
+
+
+
 
 func deductPersonalAllowance(income float64) (float64, error) {
 	personalAllowance, err := getPersonalAllowance()
