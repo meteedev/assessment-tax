@@ -13,7 +13,7 @@ func TestTaxService_CalculationTax(t *testing.T) {
 	mockIncomeDetail := &TaxRequest{
 		TotalIncome: 500000,
 		WHT:         0,
-		Allowances:  []Allowance{{AllowanceType: "", Amount: 0}, {AllowanceType: "", Amount: 0}},
+		Allowances:  []Allowance{{AllowanceType: "donation", Amount: 0}, {AllowanceType: "k-receipt", Amount: 0}},
 	}
 
 	logger := zerolog.Nop()
@@ -60,13 +60,17 @@ func TestCalculateTax(t *testing.T) {
 func TestDeductPersonalAllowance(t *testing.T) {
 	// Mock income and allowances
 	income := 100000.0
-	allowances := []Allowance{{AllowanceType: "standard", Amount: 5000}, {AllowanceType: "additional", Amount: 3000}}
+	allowances := []Allowance{{AllowanceType: "donations", Amount: 5000}, {AllowanceType: "additional", Amount: 3000}}
 
 	// Call deductPersonalAllowance function
-	taxedIncome, err := deductPersonalAllowance(income, allowances)
+	taxedIncome, err := deductPersonalAllowance(income)
+	assert.NoError(t, err, "Error occurred while deducting personal allowance")
+
+	// 
+	taxedIncome, err = deductAllowance(taxedIncome,allowances)
 
 	// Check for errors
-	assert.NoError(t, err, "Error occurred while deducting personal allowance")
+	assert.NoError(t, err, "Error occurred while deducting allowance")
 
 	// Check the taxed income
 	expectedTaxedIncome := 32000.0 // This value is based on the provided income and allowances

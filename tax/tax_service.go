@@ -59,10 +59,17 @@ func (t *TaxService) calculateTax(incomeDetail *TaxRequest) (float64, error) {
 	// Log the income for calculation
 	t.logger.Debug().Msgf("Calculating tax for income: %.2f", income)
 
-	taxedIncome, err := deductPersonalAllowance(income, allowances)
+	taxedIncome, err := deductPersonalAllowance(income)
 	if err != nil {
 		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
+	t.logger.Debug().Msgf("Taxed income (%.2f) after deductPersonalAllowance", taxedIncome)
+
+	taxedIncome, err = deductAllowance(taxedIncome,allowances)
+	if err != nil {
+		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
+	}
+	t.logger.Debug().Msgf("Taxed income (%.2f) after deductAllowance", taxedIncome)
 
 	for _, bracket := range brackets {
 		// Log processing of each bracket
@@ -95,20 +102,25 @@ func (t *TaxService) calculateTax(incomeDetail *TaxRequest) (float64, error) {
 	return taxAmount, nil
 }
 
-func deductPersonalAllowance(income float64, allowances []Allowance) (float64, error) {
-	totalAllowance := 0.0
-	for _, allowance := range allowances {
-		totalAllowance += allowance.Amount
-	}
-
+func deductPersonalAllowance(income float64) (float64, error) {
 	personalAllowance, err := getPersonalAllowance()
 	if err != nil {
 		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
-
-	taxedIncome := income - totalAllowance - personalAllowance
+	taxedIncome := income - personalAllowance
 	return taxedIncome, nil
 }
+
+
+func deductAllowance(income float64, allowances []Allowance) (float64, error) {
+	totalAllowance := 0.0
+	for _, allowance := range allowances {
+		totalAllowance += adjustMaximumAllowanceDeduct(allowance.Amount)
+	}
+	taxedIncome := income - totalAllowance 
+	return taxedIncome, nil
+}
+
 
 
 func deductWht(taxAmount float64, wht float64) (float64) {
@@ -138,4 +150,12 @@ func adjustLowerBound(lower float64) float64 {
 		return 0
 	}
 	return lower
+}
+
+
+func adjustMaximumAllowanceDeduct(allowance float64) float64 {
+	if allowance > constant.MAX_ALLOWANCE_DEDUCT {
+		return constant.MAX_ALLOWANCE_DEDUCT
+	}
+	return allowance
 }
