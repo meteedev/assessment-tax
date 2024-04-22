@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/labstack/echo/v4"
 	"github.com/meteedev/assessment-tax/apperrs"
 	"github.com/meteedev/assessment-tax/constant"
@@ -17,8 +18,11 @@ import (
 
 func New(){
 
-	// new tax service
-	taxService := tax.NewTaxService()
+	// Create a logger instance
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+
+	// Inject the logger into TaxService
+	taxService := tax.NewTaxService(&logger)
 
 	//add service to handler
 	handler := tax.NewHandler(taxService)

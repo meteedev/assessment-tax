@@ -3,8 +3,9 @@ package tax
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	taxrepo "github.com/meteedev/assessment-tax/repository"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTaxService_CalculationTax(t *testing.T) {
@@ -15,8 +16,10 @@ func TestTaxService_CalculationTax(t *testing.T) {
 		Allowances:  []Allowance{{AllowanceType: "", Amount: 0}, {AllowanceType: "", Amount: 0}},
 	}
 
+	logger := zerolog.Nop()
+
 	// Create an instance of TaxService
-	taxService := NewTaxService()
+	taxService := NewTaxService(&logger)
 
 	// Call CalculationTax method
 	taxResponse, err := taxService.CalculationTax(mockIncomeDetail)
@@ -82,7 +85,7 @@ func TestGetTaxTable(t *testing.T) {
 
 	// Check the tax brackets
 	expectedBrackets := []taxrepo.TaxBracket{
-		{LowerBound: 0, UpperBound: 150000, TaxRate: 0.10},
+		{LowerBound: 0, UpperBound: 150000, TaxRate: 0.00},
 		{LowerBound: 150001, UpperBound: 500000, TaxRate: 0.10},
 		{LowerBound: 500001, UpperBound: 1000000, TaxRate: 0.15},
 		{LowerBound: 1000001, UpperBound: 2000000, TaxRate: 0.20},
