@@ -2,7 +2,10 @@ package tax
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/meteedev/assessment-tax/apperrs"
+	"github.com/meteedev/assessment-tax/constant"
 	taxrepo "github.com/meteedev/assessment-tax/repository"
 )
 
@@ -13,12 +16,11 @@ func NewTaxService() *TaxService {
 	return &TaxService{}
 }
 
-func (t *TaxService) Calculation(incomeDetail *TaxRequest) (*TaxResponse, error) {
+func (t *TaxService) CalculationTax(incomeDetail *TaxRequest) (*TaxResponse, error) {
 	
 	income := incomeDetail.TotalIncome
 	allowances := incomeDetail.Allowances
 
-	fmt.Println("incomeDetail.TotalIncome: %.2f", incomeDetail.TotalIncome)
 
 	// Calculate tax
 	taxAmount, err := calculateTax(income,allowances)
@@ -44,12 +46,14 @@ func calculateTax(income float64, allowances []Allowance) (float64, error) {
 
     brackets, err := getTaxTable()
     if err != nil {
-        return 0, err
+        log.Println(err)
+		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
     }
 
     taxedIncome, err := deductPersonalAllowance(income, allowances)
     if err != nil {
-        return 0, err
+        log.Println(err)
+		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
     }
 
     remainingIncome := taxedIncome
@@ -84,9 +88,6 @@ func calculateTax(income float64, allowances []Allowance) (float64, error) {
 
 
 
-
-
-
 func deductPersonalAllowance(income float64 , allowances []Allowance)(float64,error){
 	
 	totalAllowance := 0.0
@@ -94,9 +95,11 @@ func deductPersonalAllowance(income float64 , allowances []Allowance)(float64,er
 		totalAllowance += allowance.Amount
 	}
 
+
 	personalAllowance,err := getPersonalAllowance()
 	if err != nil{
-		return 0,err
+		log.Println(err)
+		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
 
 	taxedIncome := income - totalAllowance - personalAllowance
@@ -110,7 +113,6 @@ func getPersonalAllowance()(float64,error){
 }
 
 func getTaxTable() ([]taxrepo.TaxBracket,error) {
-
 
 	brackets := []taxrepo.TaxBracket{
 		{LowerBound: 0, UpperBound: 150000, TaxRate: 0.10}, // Adjust the tax rate as needed

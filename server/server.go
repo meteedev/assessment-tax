@@ -10,23 +10,31 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/meteedev/assessment-tax/apperrs"
 	"github.com/meteedev/assessment-tax/constant"
 	"github.com/meteedev/assessment-tax/tax"
 )
 
 func New(){
 
-	service := tax.NewTaxService()
+	// new tax service
+	taxService := tax.NewTaxService()
 
 	//add service to handler
-	handler := tax.NewHandler(service)
+	handler := tax.NewHandler(taxService)
 	
 	e := echo.New()
 
+	// config catch error 
+	e.Use(apperrs.CustomErrorMiddleware)
+
+	//register rest api route
 	registerRoutes(e,handler)
 	
+	// start servert
 	go startServer(e)
 	
+	//config graceful shutdown
 	gracefulShutdownServer(e)
 }
 
@@ -53,7 +61,7 @@ func gracefulShutdownServer(e *echo.Echo) {
 	}
 
 	//<-ctx.Done()
-	fmt.Println(constant.SERVER_GRACEFUL_SHUTDOWN)
+	fmt.Println(constant.MSG_SERVER_GRACEFUL_SHUTDOWN)
 }
 
 // registerRoutes registers all the routes for the application.

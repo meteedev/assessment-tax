@@ -1,7 +1,6 @@
 package tax
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -22,12 +21,10 @@ func (h *Handler) TaxCalculationsHandler(c echo.Context) error {
 		return err
 	}
 	
-	fmt.Println(req)
-
-	taxResponse , err :=h.service.Calculation(req)
+	taxResponse , err :=h.service.CalculationTax(req)
 
 	if err != nil{
-		c.JSON(http.StatusInternalServerError, err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, taxResponse)

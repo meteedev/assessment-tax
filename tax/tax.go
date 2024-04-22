@@ -18,5 +18,5 @@ type TaxResponse struct {
 
 
 type Service interface{
-	Calculation(*TaxRequest)(*TaxResponse,error)
+	CalculationTax(*TaxRequest)(*TaxResponse,error)
 }
