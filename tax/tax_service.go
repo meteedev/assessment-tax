@@ -19,18 +19,23 @@ func NewTaxService(logger *zerolog.Logger) *TaxService {
 }
 
 func (t *TaxService) CalculationTax(incomeDetail *TaxRequest) (*TaxResponse, error) {
-	income := incomeDetail.TotalIncome
-	allowances := incomeDetail.Allowances
-
+	
+	err := ValidateTaxRequest(incomeDetail)
+	
+	if err != nil {
+		return nil, apperrs.NewBadRequestError(err.Error())
+	}
+	
+	
 	// Calculate tax
-	taxAmount, err := t.calculateTax(income, allowances)
+	taxAmount, err := t.calculateTax(incomeDetail)
 	if err != nil {
 		t.logger.Error().Err(err).Msgf("Error occurred during tax calculation: %v", err)
 		return nil, err
 	}
 
 	// Log the calculation details with formatting
-	t.logger.Info().Msgf("Income: %.2f, Tax Amount: %.2f", income, taxAmount)
+	t.logger.Info().Msgf("Income: %.2f, Tax Amount: %.2f", incomeDetail.TotalIncome, taxAmount)
 
 	taxResponse := TaxResponse{
 		Tax: taxAmount,
@@ -39,9 +44,13 @@ func (t *TaxService) CalculationTax(incomeDetail *TaxRequest) (*TaxResponse, err
 	return &taxResponse, nil
 }
 
-func (t *TaxService) calculateTax(income float64, allowances []Allowance) (float64, error) {
+func (t *TaxService) calculateTax(incomeDetail *TaxRequest) (float64, error) {
+	
+	income := incomeDetail.TotalIncome
+	allowances := incomeDetail.Allowances
+	wht := incomeDetail.WHT
+	
 	var taxAmount float64
-
 	brackets, err := getTaxTable()
 	if err != nil {
 		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
@@ -82,6 +91,7 @@ func (t *TaxService) calculateTax(income float64, allowances []Allowance) (float
 		}
 	}
 
+	taxAmount = deductWht(taxAmount,wht)
 	return taxAmount, nil
 }
 
@@ -99,6 +109,13 @@ func deductPersonalAllowance(income float64, allowances []Allowance) (float64, e
 	taxedIncome := income - totalAllowance - personalAllowance
 	return taxedIncome, nil
 }
+
+
+func deductWht(taxAmount float64, wht float64) (float64) {
+	return adjustLowerBound(taxAmount - wht)
+}
+
+
 
 func getPersonalAllowance() (float64, error) {
 	return 60000.0, nil
