@@ -2,7 +2,6 @@ package tax
 
 import (
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/meteedev/assessment-tax/apperrs"
 	"github.com/meteedev/assessment-tax/constant"
@@ -24,7 +23,7 @@ func (t *TaxService) CalculationTax(incomeDetail *TaxRequest) (*TaxResponse, err
 	allowances := incomeDetail.Allowances
 
 	// Calculate tax
-	taxAmount, err := calculateTax(income, allowances)
+	taxAmount, err := t.calculateTax(income, allowances)
 	if err != nil {
 		t.logger.Error().Err(err).Msgf("Error occurred during tax calculation: %v", err)
 		return nil, err
@@ -40,7 +39,7 @@ func (t *TaxService) CalculationTax(incomeDetail *TaxRequest) (*TaxResponse, err
 	return &taxResponse, nil
 }
 
-func calculateTax(income float64, allowances []Allowance) (float64, error) {
+func (t *TaxService) calculateTax(income float64, allowances []Allowance) (float64, error) {
 	var taxAmount float64
 
 	brackets, err := getTaxTable()
@@ -49,7 +48,7 @@ func calculateTax(income float64, allowances []Allowance) (float64, error) {
 	}
 
 	// Log the income for calculation
-	log.Info().Msgf("Calculating tax for income: %.2f", income)
+	t.logger.Debug().Msgf("Calculating tax for income: %.2f", income)
 
 	taxedIncome, err := deductPersonalAllowance(income, allowances)
 	if err != nil {
@@ -58,28 +57,28 @@ func calculateTax(income float64, allowances []Allowance) (float64, error) {
 
 	for _, bracket := range brackets {
 		// Log processing of each bracket
-		log.Info().Msgf("Processing bracket: %+v", bracket)
+		t.logger.Debug().Msgf("Processing bracket: %+v", bracket)
 
 		if taxedIncome <= bracket.UpperBound || bracket.UpperBound == 0 {
 			// Log when taxed income is within the bracket upper bound
-			log.Info().Msgf("Taxed income (%.2f) is within the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
+			t.logger.Debug().Msgf("Taxed income (%.2f) is within the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
 
 			taxableAmount := taxedIncome - adjustLowerBound(bracket.LowerBound-1)
 			if taxableAmount > 0 {
 				// Log taxable amount and tax amount after applying rate
-				log.Info().Msgf("Taxable amount: %.2f", taxableAmount)
+				t.logger.Debug().Msgf("Taxable amount: %.2f", taxableAmount)
 				taxAmount += taxableAmount * bracket.TaxRate
-				log.Info().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
+				t.logger.Debug().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
 			}
 			break
 		} else {
 			// Log when taxed income exceeds the bracket upper bound
-			log.Info().Msgf("Taxed income (%.2f) exceeds the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
+			t.logger.Debug().Msgf("Taxed income (%.2f) exceeds the bracket upper bound (%.2f)", taxedIncome, bracket.UpperBound)
 
 			taxableAmount := bracket.UpperBound - adjustLowerBound(bracket.LowerBound-1)
-			log.Info().Msgf("Taxable amount: %.2f", taxableAmount)
+			t.logger.Debug().Msgf("Taxable amount: %.2f", taxableAmount)
 			taxAmount += taxableAmount * bracket.TaxRate
-			log.Info().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
+			t.logger.Debug().Msgf("Tax amount after applying rate %.2f: %.2f", bracket.TaxRate, taxAmount)
 		}
 	}
 

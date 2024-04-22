@@ -21,6 +21,8 @@ func New(){
 	// Create a logger instance
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
+	logger = logger.Level(zerolog.InfoLevel)
+
 	// Inject the logger into TaxService
 	taxService := tax.NewTaxService(&logger)
 
