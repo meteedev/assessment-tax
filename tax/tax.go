@@ -11,10 +11,18 @@ type TaxRequest struct {
 	Allowances  []Allowance `json:"allowances"`
 }
 
+type TaxLevel struct {
+	Level string  `json:"level"`
+	Tax   float64 `json:"tax"`
+}
+
 
 type TaxResponse struct {
 	Tax float64 `json:"tax"`
+	TaxLevel []TaxLevel `json:"taxLevel"`
 }
+
+
 
 
 type Service interface{
