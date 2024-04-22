@@ -1,0 +1,43 @@
+name: Go CI
+
+on: [push]
+
+env:
+  DEFAULT_GO_VERSION: '1.22.1'  # Default Go version if not specified in matrix
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.22.1']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Display Go version
+        run: go version
+      - name: Install dependencies
+        run: go mod download
+      - name: Run go vet (static analysis)
+        run: go vet ./...
+
+
+  Unit-Test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.22.1']
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Install dependencies
+        run: go mod download
+      - name: Run tests
+        run: go test -v ./...
