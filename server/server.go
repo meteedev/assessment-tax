@@ -9,27 +9,36 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/labstack/echo/v4"
 	"github.com/meteedev/assessment-tax/apperrs"
 	"github.com/meteedev/assessment-tax/constant"
-	"github.com/meteedev/assessment-tax/tax"
+	"github.com/meteedev/assessment-tax/postgres"
+	"github.com/meteedev/assessment-tax/tax/repository"
+	"github.com/meteedev/assessment-tax/tax/service"
+	"github.com/meteedev/assessment-tax/tax/handler"
+	"github.com/rs/zerolog"
 )
 
 func New(){
 
-	// Create a logger instance
-	//logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	db , err := postgres.NewDbTest()
+	if err != nil {
+	 	panic(err)
+	}
+	
+
 
 	logger := zerolog.New(os.Stdout).With().Logger()
-
 	logger = logger.Level(zerolog.DebugLevel)
 
+	// inject db to repository
+	taxDeductConfigRepo := repository.NewTaxDeductConfigRepo(db)
+
 	// Inject the logger into TaxService
-	taxService := tax.NewTaxService(&logger)
+	taxService := service.NewTaxService(&logger,taxDeductConfigRepo)
 
 	//add service to handler
-	handler := tax.NewHandler(taxService)
+	handler := handler.NewTaxHandler(taxService)
 	
 	e := echo.New()
 
@@ -73,7 +82,7 @@ func gracefulShutdownServer(e *echo.Echo) {
 }
 
 // registerRoutes registers all the routes for the application.
-func registerRoutes(e *echo.Echo,handler *tax.Handler) {
+func registerRoutes(e *echo.Echo,handler *handler.TaxHandler) {
 	
 	// Tax routes
 	taxGroup := e.Group("/tax")

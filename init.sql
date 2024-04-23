@@ -1,15 +1,10 @@
-CREATE TABLE tax_rates (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    IncomeRangeFrom DECIMAL(15, 2),
-    IncomeRangeTo DECIMAL(15, 2),
-    TaxRate DECIMAL(5, 2)
-);
+CREATE TABLE tax_deduct_config (
+    deduct_id CHARACTER(10) PRIMARY KEY,
+    amount DECIMAL(15, 2) -- Assuming maximum precision of 15 digits with 2 decimal places
+    description CHARACTER(100)
+); 
 
--- data init
-INSERT INTO TaxRates (IncomeRangeFrom, IncomeRangeTo, TaxRate)
-VALUES
-    (0, 150000, 0),
-    (150001, 500000, 0.10),
-    (500001, 1000000, 0.15),
-    (1000001, 2000000, 0.20),
-    (2000001, NULL, 0.35);
+-- Inserting sample data into tax_deduct_config table
+INSERT INTO tax_deduct_config (deduct_type, amount, description) VALUES
+    ('personal', 60000.00, 'Personal allowance'),
+    ('k-receipt', 50000.00, 'k-receipt allowance');
