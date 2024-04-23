@@ -27,8 +27,18 @@ type TaxBracket struct {
 }
 
 
+type UpdateDeductRequest struct {
+	Amount 		float64		`json:"amount"`	
+}
+
+type UpdateDeductResponse struct {
+	Amount 		float64		`json:"amount"`	
+}
+
+
 
 type TaxServicePort interface{
 	CalculationTax(*TaxRequest)(*TaxResponse,error)
+	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }
 

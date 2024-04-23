@@ -115,7 +115,40 @@ func (t TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,err
 	return &taxResponse,nil
 }
 
+func (t TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*UpdateDeductResponse,error){
+	
+	amount := updateReq.Amount
 
+	err := ValidatePersonaAllowance(amount)
+	
+	if err != nil {
+		return nil, apperrs.NewBadRequestError(err.Error())
+	}
+
+	deductId := constant.DEDUCT_PERSONAL_ID	
+	updateRow , err := t.DeductRepo.UpdateById(deductId,amount)
+	
+	if err != nil {
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+
+	if updateRow == 0 {
+		return nil, apperrs.NewUnprocessableEntity(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+	
+	d, err := t.DeductRepo.FindById(deductId)
+
+	if err != nil {
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+
+ 	updDeductResponse :=UpdateDeductResponse{
+		Amount: d.Amount,
+	} 
+
+	return &updDeductResponse, nil
+	
+}
 
 func deductPersonalAllowance(income float64) (float64, error) {
 	personalAllowance, err := getPersonalAllowance()
@@ -130,7 +163,7 @@ func deductPersonalAllowance(income float64) (float64, error) {
 func deductAllowance(income float64, allowances []Allowance) (float64, error) {
 	totalAllowance := 0.0
 	for _, allowance := range allowances {
-		totalAllowance += adjustMaximumAllowanceDeduct(allowance.Amount)
+		totalAllowance += adjustMaximumDonationAllowanceDeduct(allowance.Amount)
 	}
 	taxedIncome := income - totalAllowance 
 	return taxedIncome, nil
@@ -169,9 +202,9 @@ func adjustLowerBound(lower float64) float64 {
 }
 
 
-func adjustMaximumAllowanceDeduct(allowance float64) float64 {
-	if allowance > constant.MAX_ALLOWANCE_DEDUCT {
-		return constant.MAX_ALLOWANCE_DEDUCT
+func adjustMaximumDonationAllowanceDeduct(allowance float64) float64 {
+	if allowance > constant.MAX_ALLOWANCE_DONATION_DEDUCT {
+		return constant.MAX_ALLOWANCE_DONATION_DEDUCT
 	}
 	return allowance
 }

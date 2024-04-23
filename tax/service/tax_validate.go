@@ -72,3 +72,42 @@ func contains(arr []string, str string) bool {
 	}
 	return false
 }
+
+
+func ValidatePersonaAllowance(amount float64) error {
+	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
+	var errMsgs []string
+
+	validatePersonalAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
+	validatePersonalAllowanceMinimum(amount,&errMsgs)
+	validatePersonalAllowanceMaximum(amount,&errMsgs)
+
+	if len(errMsgs) > 0 {
+		return errors.New(strings.Join(errMsgs, "; "))
+	}
+
+	return nil
+}
+
+func validatePersonalAllowanceGreaterThanOrEqualZero(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount < 0 {
+		*errMsgs = append(*errMsgs, constant.MSG_BU_INVALID_PERSONAL_ALLOW_LESS_THAN_ZERO)
+	}
+}
+
+func validatePersonalAllowanceMinimum(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount < constant.MIN_ALLOWANCE_PERSONAL {
+		msg := fmt.Sprintf("Personal deductibles start at %.2f baht", constant.MIN_ALLOWANCE_PERSONAL)
+		*errMsgs = append(*errMsgs,msg)
+	}
+}
+
+func validatePersonalAllowanceMaximum(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount < constant.MAX_ALLOWANCE_PERSONAL {
+		msg := fmt.Sprintf("Maximum Personal deductibles %.2f baht", constant.MAX_ALLOWANCE_PERSONAL)
+		*errMsgs = append(*errMsgs,msg)
+	}
+}

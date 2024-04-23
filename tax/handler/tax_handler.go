@@ -32,5 +32,18 @@ func (h *TaxHandler) TaxCalculationsHandler(c echo.Context) error {
 }
 
 func (h *TaxHandler) DeductionsPersonal(c echo.Context) error {	
-	return c.JSON(http.StatusOK, "DeductionsPersonal")
+	req := new(service.UpdateDeductRequest)
+	
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+
+	updateResponse , err :=h.service.UpdatePersonalAllowance(req)
+
+	if err != nil{
+		return err
+	}
+
+
+	return c.JSON(http.StatusOK, updateResponse)
 }
