@@ -7,20 +7,8 @@ import (
 
 )
 
-type Postgres struct {
-	Db *sql.DB
-}
 
-type DbConfiguration struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DbName   string
-	SslMode  string
-}
-
-func New() (*Postgres, error) {
+func NewDb() (*sql.DB, error) {
 	databaseSource := os.Getenv("DATABASE_URL")
 	log.Println(databaseSource)
 	db, err := sql.Open("postgres", databaseSource)
@@ -31,11 +19,12 @@ func New() (*Postgres, error) {
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	return &Postgres{Db: db}, nil
+	}	
+	return db, nil
 }
 
 
 
-
+func NewDbTest() (*sql.DB, error) {
+	return nil, nil
+}
