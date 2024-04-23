@@ -19,7 +19,9 @@ import (
 func New(){
 
 	// Create a logger instance
-	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	//logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+
+	logger := zerolog.New(os.Stdout).With().Logger()
 
 	logger = logger.Level(zerolog.DebugLevel)
 

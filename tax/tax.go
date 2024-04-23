@@ -11,16 +11,22 @@ type TaxRequest struct {
 	Allowances  []Allowance `json:"allowances"`
 }
 
-type TaxLevel struct {
-	Level string  `json:"level"`
-	Tax   float64 `json:"tax"`
-}
-
 
 type TaxResponse struct {
-	Tax float64 `json:"tax"`
-	TaxLevel []TaxLevel `json:"taxLevel"`
+	Tax float64 		  	`json:"tax"`
+	TaxBracket []TaxBracket `json:"taxLevel"`
 }
+
+
+type TaxBracket struct {
+	Level 		string		`json:"level"`	
+	LowerBound 	float64 	`json:"-"`
+	UpperBound 	float64 	`json:"-"`
+	TaxRate    	float64 	`json:"-"`
+	Tax 		float64 	`json:"tax"`
+}
+
+
 
 
 

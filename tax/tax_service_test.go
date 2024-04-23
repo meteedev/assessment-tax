@@ -3,7 +3,6 @@ package tax
 import (
 	"testing"
 
-	taxrepo "github.com/meteedev/assessment-tax/repository"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,14 +46,14 @@ func TestCalculateTax(t *testing.T) {
 	
 
 	// Call calculateTax function
-	taxAmount, err := taxService.calculateTax(mockIncomeDetail)
+	taxResponse, err := taxService.calculateTax(mockIncomeDetail)
 
 	// Check for errors
 	assert.NoError(t, err, "Error occurred while calculating tax")
 
 	// Check the calculated tax amount
 	expectedTaxAmount := 29000.0 // This value is based on the provided tax brackets and allowances
-	assert.Equal(t, expectedTaxAmount, taxAmount, "Tax amount mismatch")
+	assert.Equal(t, expectedTaxAmount, taxResponse.Tax, "Tax amount mismatch")
 }
 
 func TestDeductPersonalAllowance(t *testing.T) {
@@ -96,15 +95,15 @@ func TestGetTaxTable(t *testing.T) {
 	// Check for errors
 	assert.NoError(t, err, "Error occurred while getting tax table")
 
-	// Check the tax brackets
-	expectedBrackets := []taxrepo.TaxBracket{
-		{LowerBound: 0, UpperBound: 150000, TaxRate: 0.00},
-		{LowerBound: 150001, UpperBound: 500000, TaxRate: 0.10},
-		{LowerBound: 500001, UpperBound: 1000000, TaxRate: 0.15},
-		{LowerBound: 1000001, UpperBound: 2000000, TaxRate: 0.20},
-		{LowerBound: 2000001, UpperBound: 0, TaxRate: 0.35},
+	expectedBrackets := []TaxBracket{
+		{Level:"0-150,000",LowerBound: 0, UpperBound: 150000, TaxRate: 0.00, Tax: 0.0 }, // Adjust the tax rate as needed
+		{Level:"150,001-500,000",LowerBound: 150001, UpperBound: 500000, TaxRate: 0.10, Tax: 0.0},
+		{Level:"500,001-1,000,000",LowerBound: 500001, UpperBound: 1000000, TaxRate: 0.15, Tax: 0.0},
+		{Level:"1,000,001-2,000,000",LowerBound: 1000001, UpperBound: 2000000, TaxRate: 0.20, Tax: 0.0},
+		{Level:"2,000,001 ขึ้นไป",LowerBound: 2000001, UpperBound: 0, TaxRate: 0.35,Tax: 0.0},
 	}
 
+	
 	// Compare each bracket individually
 	for i, bracket := range brackets {
 		assert.Equal(t, expectedBrackets[i], bracket, "Tax bracket mismatch")
