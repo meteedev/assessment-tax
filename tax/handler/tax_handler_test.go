@@ -27,6 +27,11 @@ func (m *MockService) UpdatePersonalAllowance(updateDeductRequest *service.Updat
 	return args.Get(0).(*service.UpdateDeductResponse), args.Error(1)
 }
 
+func (m *MockService) UpdateKreceiptAllowance(updateDeductRequest *service.UpdateDeductRequest)(*service.UpdateDeductResponse,error){
+	args := m.Called(updateDeductRequest)
+	return args.Get(0).(*service.UpdateDeductResponse), args.Error(1)
+}
+
 func TestTaxCalculationsHandler(t *testing.T) {
 	// Create a new instance of the mock service
 	mockService := new(MockService)

@@ -47,3 +47,20 @@ func (h *TaxHandler) DeductionsPersonal(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, updateResponse)
 }
+
+func (h *TaxHandler) DeductionsKreceipt(c echo.Context) error {	
+	req := new(service.UpdateDeductRequest)
+	
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+
+	updateResponse , err :=h.service.UpdateKreceiptAllowance(req)
+
+	if err != nil{
+		return err
+	}
+
+
+	return c.JSON(http.StatusOK, updateResponse)
+}
