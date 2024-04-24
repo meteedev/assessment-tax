@@ -1,6 +1,8 @@
 package service
 
 import (
+	
+
 	"github.com/rs/zerolog"
 
 	"github.com/meteedev/assessment-tax/apperrs"
@@ -13,8 +15,8 @@ type TaxService struct {
 	DeductRepo repository.TaxDeductConfigPort
 }
 
-func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfigPort) TaxService {
-	return TaxService{
+func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfigPort) TaxServicePort {
+	return &TaxService{
 		logger: logger,
 		DeductRepo: deductRepo,
 	}
@@ -23,7 +25,7 @@ func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfig
 
 
 
-func (t TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error) {
+func (t *TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error) {
 	
 	err := ValidateTaxRequest(incomeDetail)
 	
@@ -32,7 +34,7 @@ func (t TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error)
 	}
 	
 	// Calculate tax
-	taxResponse, err := t.calculateTax(incomeDetail)
+	taxResponse, err := t.CalculateTax(incomeDetail)
 	if err != nil {
 		t.logger.Error().Err(err).Msgf("Error occurred during tax calculation: %v", err)
 		return nil, err
@@ -43,7 +45,7 @@ func (t TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error)
 	return taxResponse, nil
 }
 
-func (t TaxService) calculateTax(incomeDetail *TaxRequest) (*TaxResponse, error) {
+func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error) {
 	
 	income := incomeDetail.TotalIncome
 	allowances := incomeDetail.Allowances
@@ -53,7 +55,7 @@ func (t TaxService) calculateTax(incomeDetail *TaxRequest) (*TaxResponse, error)
 	// Log the income for calculation
 	t.logger.Debug().Msgf("Calculating tax for income: %.2f", income)
 
-	taxedIncome, err := deductPersonalAllowance(income)
+	taxedIncome, err := t.deductPersonalAllowance(income)
 	if err != nil {
 		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
@@ -71,14 +73,25 @@ func (t TaxService) calculateTax(incomeDetail *TaxRequest) (*TaxResponse, error)
 		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
 
-	taxResponse.Tax = deductWht(taxResponse.Tax,wht)
+	taxDiff := deductWht(taxResponse.Tax,wht)
+
+	setUpTaxRefund(taxDiff,taxResponse)
 
 	return taxResponse, nil
 }
 
 
+func setUpTaxRefund(taxDiff float64, taxResponse *TaxResponse){
+	if taxDiff < 0{
+		taxResponse.TaxRefund = taxDiff * (-1)
+		taxResponse.Tax = 0
+	}else{
+		taxResponse.TaxRefund = 0 
+		taxResponse.Tax = taxDiff
+	}
+}
 
-func (t TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,error){
+func (t *TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,error){
 	
 	brackets, err := getTaxTable()
 	if err != nil {
@@ -115,12 +128,67 @@ func (t TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,err
 	return &taxResponse,nil
 }
 
+func (t *TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*UpdateDeductResponse,error){
+	
+	amount := updateReq.Amount
 
-
-func deductPersonalAllowance(income float64) (float64, error) {
-	personalAllowance, err := getPersonalAllowance()
+	err := ValidatePersonaAllowance(amount)
+	
 	if err != nil {
-		return 0, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
+		return nil, apperrs.NewBadRequestError(err.Error())
+	}
+
+	deductId := constant.DEDUCT_PERSONAL_ID	
+
+
+
+	updateRow , err := t.DeductRepo.UpdateById(deductId,amount)
+	
+
+
+	if err != nil {
+		t.logger.Error().Msg(err.Error())
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+
+	if updateRow == 0 {
+		return nil, apperrs.NewUnprocessableEntity(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+	
+	d, err := t.DeductRepo.FindById(deductId)
+
+	
+
+	if err != nil {
+		t.logger.Error().Msg(err.Error())
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+
+ 	updDeductResponse :=UpdateDeductResponse{
+		Amount: d.Amount,
+	} 
+
+	return &updDeductResponse, nil
+	
+}
+
+
+
+func (t *TaxService) getPersonalAllowance() (float64, error) {
+    personAllowance, err := t.DeductRepo.FindById(constant.DEDUCT_PERSONAL_ID)
+    if err != nil {
+        return 0, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_PERSONAL_CONFIG_NOT_FOUND)
+    }
+    return personAllowance.Amount, nil
+}
+
+
+
+
+func (t *TaxService) deductPersonalAllowance(income float64) (float64, error) {
+	personalAllowance, err := t.getPersonalAllowance()
+	if err != nil {
+		return 0, err
 	}
 	taxedIncome := income - personalAllowance
 	return taxedIncome, nil
@@ -130,7 +198,7 @@ func deductPersonalAllowance(income float64) (float64, error) {
 func deductAllowance(income float64, allowances []Allowance) (float64, error) {
 	totalAllowance := 0.0
 	for _, allowance := range allowances {
-		totalAllowance += adjustMaximumAllowanceDeduct(allowance.Amount)
+		totalAllowance += adjustMaximumDonationAllowanceDeduct(allowance.Amount)
 	}
 	taxedIncome := income - totalAllowance 
 	return taxedIncome, nil
@@ -139,14 +207,13 @@ func deductAllowance(income float64, allowances []Allowance) (float64, error) {
 
 
 func deductWht(taxAmount float64, wht float64) (float64) {
-	return adjustLowerBound(taxAmount - wht)
+	taxDiff := taxAmount - wht
+	return taxDiff
 }
 
 
 
-func getPersonalAllowance() (float64, error) {
-	return 60000.0, nil
-}
+
 
 func getTaxTable() ([]TaxBracket, error) {
 	brackets := []TaxBracket{
@@ -169,9 +236,9 @@ func adjustLowerBound(lower float64) float64 {
 }
 
 
-func adjustMaximumAllowanceDeduct(allowance float64) float64 {
-	if allowance > constant.MAX_ALLOWANCE_DEDUCT {
-		return constant.MAX_ALLOWANCE_DEDUCT
+func adjustMaximumDonationAllowanceDeduct(allowance float64) float64 {
+	if allowance > constant.MAX_ALLOWANCE_DONATION_DEDUCT {
+		return constant.MAX_ALLOWANCE_DONATION_DEDUCT
 	}
 	return allowance
 }

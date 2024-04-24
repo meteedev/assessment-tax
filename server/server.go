@@ -10,18 +10,20 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/meteedev/assessment-tax/apperrs"
+	"github.com/meteedev/assessment-tax/authen"
 	"github.com/meteedev/assessment-tax/constant"
 	"github.com/meteedev/assessment-tax/postgres"
+	"github.com/meteedev/assessment-tax/tax/handler"
 	"github.com/meteedev/assessment-tax/tax/repository"
 	"github.com/meteedev/assessment-tax/tax/service"
-	"github.com/meteedev/assessment-tax/tax/handler"
 	"github.com/rs/zerolog"
 )
 
 func New(){
 
-	db , err := postgres.NewDbTest()
+	db , err := postgres.NewDb()
 	if err != nil {
 	 	panic(err)
 	}
@@ -91,8 +93,8 @@ func registerRoutes(e *echo.Echo,handler *handler.TaxHandler) {
 
 	// Admin routes
 	adminGroup := e.Group("/admin")
+	adminGroup.Use(middleware.BasicAuth(authen.AuthMiddleware))
 	adminGroup.POST("/deductions/personal", handler.DeductionsPersonal)
-	
 
 }
 
