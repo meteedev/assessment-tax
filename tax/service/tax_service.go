@@ -13,8 +13,8 @@ type TaxService struct {
 	DeductRepo repository.TaxDeductConfigPort
 }
 
-func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfigPort) TaxService {
-	return TaxService{
+func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfigPort) TaxServicePort {
+	return &TaxService{
 		logger: logger,
 		DeductRepo: deductRepo,
 	}
@@ -23,7 +23,7 @@ func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfig
 
 
 
-func (t TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error) {
+func (t *TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error) {
 	
 	err := ValidateTaxRequest(incomeDetail)
 	
@@ -32,7 +32,7 @@ func (t TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error)
 	}
 	
 	// Calculate tax
-	taxResponse, err := t.calculateTax(incomeDetail)
+	taxResponse, err := t.CalculateTax(incomeDetail)
 	if err != nil {
 		t.logger.Error().Err(err).Msgf("Error occurred during tax calculation: %v", err)
 		return nil, err
@@ -43,7 +43,7 @@ func (t TaxService) CalculationTax(incomeDetail *TaxRequest)(*TaxResponse,error)
 	return taxResponse, nil
 }
 
-func (t TaxService) calculateTax(incomeDetail *TaxRequest) (*TaxResponse, error) {
+func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error) {
 	
 	income := incomeDetail.TotalIncome
 	allowances := incomeDetail.Allowances
@@ -78,7 +78,7 @@ func (t TaxService) calculateTax(incomeDetail *TaxRequest) (*TaxResponse, error)
 
 
 
-func (t TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,error){
+func (t *TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,error){
 	
 	brackets, err := getTaxTable()
 	if err != nil {
@@ -115,7 +115,7 @@ func (t TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,err
 	return &taxResponse,nil
 }
 
-func (t TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*UpdateDeductResponse,error){
+func (t *TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*UpdateDeductResponse,error){
 	
 	amount := updateReq.Amount
 
@@ -129,6 +129,7 @@ func (t TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*Upd
 	updateRow , err := t.DeductRepo.UpdateById(deductId,amount)
 	
 	if err != nil {
+		t.logger.Error().Msg(err.Error())
 		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
 	}
 
@@ -139,6 +140,7 @@ func (t TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*Upd
 	d, err := t.DeductRepo.FindById(deductId)
 
 	if err != nil {
+		t.logger.Error().Msg(err.Error())
 		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
 	}
 

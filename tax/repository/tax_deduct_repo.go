@@ -16,7 +16,7 @@ func NewTaxDeductConfigRepo(db *sql.DB) TaxDeductConfigPort {
 
 
 
-func (t TaxDeductConfigRepo) UpdateById(id string , amount float64) (int64,error){
+func (t *TaxDeductConfigRepo) UpdateById(id string , amount float64) (int64,error){
 	
 
 	query := ` UPDATE  
@@ -36,7 +36,7 @@ func (t TaxDeductConfigRepo) UpdateById(id string , amount float64) (int64,error
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(query,amount,id)
+	res, err := stmt.Exec(amount,id)
 	
 	if err != nil {
         return 0, err
@@ -51,7 +51,7 @@ func (t TaxDeductConfigRepo) UpdateById(id string , amount float64) (int64,error
     return numRows, nil
 }
 
-func (t TaxDeductConfigRepo) FindById(id string) (*TaxDeductConfig,error){
+func (t *TaxDeductConfigRepo) FindById(id string) (*TaxDeductConfig,error){
 
 	query := `
 				SELECT 
@@ -69,7 +69,7 @@ func (t TaxDeductConfigRepo) FindById(id string) (*TaxDeductConfig,error){
 	defer stmt.Close()
 
 	// Execute the query using the QueryRow method of the DB object
-	row := stmt.QueryRow(query, id)
+	row := stmt.QueryRow(id)
 
 	var  tdc TaxDeductConfig
 

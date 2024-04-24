@@ -41,12 +41,12 @@ func TestCalculateTax(t *testing.T) {
 	mockIncomeDetail := &TaxRequest{
 		TotalIncome: 500000,
 		WHT:         0,
-		Allowances:  []Allowance{{AllowanceType: "", Amount: 0}, {AllowanceType: "", Amount: 0}},
+		Allowances:  []Allowance{{AllowanceType: "donation", Amount: 0}, {AllowanceType: "k-receipt", Amount: 0}},
 	}
 	
 
 	// Call calculateTax function
-	taxResponse, err := taxService.calculateTax(mockIncomeDetail)
+	taxResponse, err := taxService.CalculationTax(mockIncomeDetail)
 
 	// Check for errors
 	assert.NoError(t, err, "Error occurred while calculating tax")

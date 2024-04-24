@@ -23,7 +23,7 @@ import (
 
 func New(){
 
-	db , err := postgres.NewDbTest()
+	db , err := postgres.NewDb()
 	if err != nil {
 	 	panic(err)
 	}

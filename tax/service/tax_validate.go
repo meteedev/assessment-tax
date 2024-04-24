@@ -106,7 +106,7 @@ func validatePersonalAllowanceMinimum(amount float64, errMsgs *[]string) {
 
 func validatePersonalAllowanceMaximum(amount float64, errMsgs *[]string) {		
 	//fmt.Println("wht ",wht)
-	if amount < constant.MAX_ALLOWANCE_PERSONAL {
+	if amount > constant.MAX_ALLOWANCE_PERSONAL {
 		msg := fmt.Sprintf("Maximum Personal deductibles %.2f baht", constant.MAX_ALLOWANCE_PERSONAL)
 		*errMsgs = append(*errMsgs,msg)
 	}

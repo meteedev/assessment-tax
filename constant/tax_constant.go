@@ -8,5 +8,5 @@ const (
 )
 
 const (
-	DEDUCT_PERSONAL_ID = "PERSONAL"
+	DEDUCT_PERSONAL_ID = "personal"
 )
