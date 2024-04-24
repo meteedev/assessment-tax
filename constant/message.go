@@ -15,6 +15,8 @@ const (
 const (
 	MSG_BU_GERNERAL_ERROR = "Sorry for the inconvenience Unavailable at this time"
 	
+	MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO = "totalIncome must greater than 0 "
+
 	MSG_BU_INVALID_WHT_LESS_THAN_ZERO = "WHT must not be less than 0 "
 	MSG_BU_INVALID_WHT_GREATER_THAN_TOTALINCOME = "WHT can not greater than Total income"
 	

@@ -16,6 +16,7 @@ func ValidateTaxRequest(taxRequest *TaxRequest) error {
 	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
 	var errMsgs []string
 
+	validateTotalIncomeGreaterThanOrEqualZero(taxRequest.TotalIncome,&errMsgs)
 	validateWht(taxRequest.WHT,taxRequest.TotalIncome, &errMsgs)
 	validateAllowances(taxRequest,&errMsgs)
 
@@ -77,7 +78,7 @@ func contains(arr []string, str string) bool {
 func ValidatePersonaAllowance(amount float64) error {
 	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
 	var errMsgs []string
-
+	
 	validatePersonalAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
 	validatePersonalAllowanceMinimum(amount,&errMsgs)
 	validatePersonalAllowanceMaximum(amount,&errMsgs)
@@ -151,5 +152,12 @@ func validateKreceiptAllowanceMaximum(amount float64, errMsgs *[]string) {
 	if amount > constant.MAX_ALLOWANCE_K_RECEIPT {
 		msg := fmt.Sprintf("Maximum k-receipt deductibles %.2f baht", constant.MAX_ALLOWANCE_K_RECEIPT)
 		*errMsgs = append(*errMsgs,msg)
+	}
+}
+
+func validateTotalIncomeGreaterThanOrEqualZero(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount <= 0 {
+		*errMsgs = append(*errMsgs, constant.MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO)
 	}
 }
