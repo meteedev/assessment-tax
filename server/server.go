@@ -95,6 +95,7 @@ func registerRoutes(e *echo.Echo,handler *handler.TaxHandler) {
 	adminGroup := e.Group("/admin")
 	adminGroup.Use(middleware.BasicAuth(authen.AuthMiddleware))
 	adminGroup.POST("/deductions/personal", handler.DeductionsPersonal)
+	adminGroup.POST("/deductions/personal", handler.DeductionsPersonal)
 
 }
 
