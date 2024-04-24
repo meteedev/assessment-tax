@@ -61,7 +61,7 @@ func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error
 	}
 	t.logger.Debug().Msgf("Taxed income (%.2f) after deductPersonalAllowance", taxedIncome)
 
-	taxedIncome, err = deductAllowance(taxedIncome,allowances)
+	taxedIncome, err = t.deductAllowance(taxedIncome,allowances)
 	if err != nil {
 		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
@@ -73,7 +73,7 @@ func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error
 		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
 
-	taxDiff := deductWht(taxResponse.Tax,wht)
+	taxDiff := t.deductWht(taxResponse.Tax,wht)
 
 	setUpTaxRefund(taxDiff,taxResponse)
 
@@ -93,7 +93,7 @@ func setUpTaxRefund(taxDiff float64, taxResponse *TaxResponse){
 
 func (t *TaxService) calculateWithTaxTable(taxedIncome float64,)(*TaxResponse,error){
 	
-	brackets, err := getTaxTable()
+	brackets, err := t.getTaxTable()
 	if err != nil {
 		return nil,apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 	}
@@ -173,6 +173,46 @@ func (t *TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest)(*Up
 }
 
 
+func (t *TaxService) UpdateKreceiptAllowance(updateReq *UpdateDeductRequest)(*UpdateDeductResponse,error){
+	
+	amount := updateReq.Amount
+
+	err := ValidateKreceiptAllowance(amount)
+	
+	if err != nil {
+		return nil, apperrs.NewBadRequestError(err.Error())
+	}
+
+	deductId := constant.DEDUCT_K_RECEIPT_ID
+
+	updateRow , err := t.DeductRepo.UpdateById(deductId,amount)
+	
+	if err != nil {
+		t.logger.Error().Msg(err.Error())
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+
+	if updateRow == 0 {
+		return nil, apperrs.NewUnprocessableEntity(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+	
+	d, err := t.DeductRepo.FindById(deductId)
+
+	
+
+	if err != nil {
+		t.logger.Error().Msg(err.Error())
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_UPD_PERSONAL_FAILED)
+	}
+
+ 	updDeductResponse :=UpdateDeductResponse{
+		Amount: d.Amount,
+	} 
+
+	return &updDeductResponse, nil
+	
+}
+
 
 func (t *TaxService) getPersonalAllowance() (float64, error) {
     personAllowance, err := t.DeductRepo.FindById(constant.DEDUCT_PERSONAL_ID)
@@ -182,6 +222,29 @@ func (t *TaxService) getPersonalAllowance() (float64, error) {
     return personAllowance.Amount, nil
 }
 
+
+func (t *TaxService) getKreceiptAllowance() (float64, error) {
+    kreceiptAllowance, err := t.DeductRepo.FindById(constant.DEDUCT_K_RECEIPT_ID)
+    if err != nil {
+        return 0, apperrs.NewInternalServerError(constant.MSG_BU_DEDUCT_K_RECEIPT_CONFIG_NOT_FOUND)
+    }
+    return kreceiptAllowance.Amount, nil
+}
+
+
+func (t *TaxService) adjustMaximumKreceiptAllowanceDeduct(allowance float64) (float64 ,error){
+	
+	kreciptAllowanceConfig , err := t.getKreceiptAllowance()
+
+	if err !=nil {
+		return 0, err
+	}
+	
+	if allowance > kreciptAllowanceConfig {
+		return kreciptAllowanceConfig,nil
+	}
+	return allowance,nil
+}
 
 
 
@@ -195,18 +258,43 @@ func (t *TaxService) deductPersonalAllowance(income float64) (float64, error) {
 }
 
 
-func deductAllowance(income float64, allowances []Allowance) (float64, error) {
+
+// func deductAllowance(income float64, allowances []Allowance) (float64, error) {
+// 	totalAllowance := 0.0
+// 	for _, allowance := range allowances {
+// 		totalAllowance += adjustMaximumDonationAllowanceDeduct(allowance.Amount)
+// 	}
+// 	taxedIncome := income - totalAllowance 
+// 	return taxedIncome, nil
+// }
+
+
+func (t *TaxService) deductAllowance(income float64, allowances []Allowance) (float64, error) {
 	totalAllowance := 0.0
 	for _, allowance := range allowances {
-		totalAllowance += adjustMaximumDonationAllowanceDeduct(allowance.Amount)
+		
+		if constant.DEDUCT_DONATION_ID == allowance.AllowanceType{
+			totalAllowance += t.adjustMaximumDonationAllowanceDeduct(allowance.Amount)
+		}
+
+		if constant.DEDUCT_K_RECEIPT_ID == allowance.AllowanceType{
+			
+			krecieptAdjust , err := t.adjustMaximumKreceiptAllowanceDeduct(allowance.Amount)
+
+			if err != nil {
+				return 0,err
+			}
+
+			totalAllowance += krecieptAdjust
+		}
+		
 	}
 	taxedIncome := income - totalAllowance 
 	return taxedIncome, nil
 }
 
 
-
-func deductWht(taxAmount float64, wht float64) (float64) {
+func (t *TaxService) deductWht(taxAmount float64, wht float64) (float64) {
 	taxDiff := taxAmount - wht
 	return taxDiff
 }
@@ -215,7 +303,7 @@ func deductWht(taxAmount float64, wht float64) (float64) {
 
 
 
-func getTaxTable() ([]TaxBracket, error) {
+func (t *TaxService) getTaxTable() ([]TaxBracket, error) {
 	brackets := []TaxBracket{
 		{Level:"0-150,000",LowerBound: 0, UpperBound: 150000, TaxRate: 0.00, Tax: 0.0 }, // Adjust the tax rate as needed
 		{Level:"150,001-500,000",LowerBound: 150001, UpperBound: 500000, TaxRate: 0.10, Tax: 0.0},
@@ -228,7 +316,7 @@ func getTaxTable() ([]TaxBracket, error) {
 }
 
 
-func adjustLowerBound(lower float64) float64 {
+func (t *TaxService) adjustLowerBound(lower float64) float64 {
 	if lower < 0 {
 		return 0
 	}
@@ -236,9 +324,11 @@ func adjustLowerBound(lower float64) float64 {
 }
 
 
-func adjustMaximumDonationAllowanceDeduct(allowance float64) float64 {
+func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) float64 {
 	if allowance > constant.MAX_ALLOWANCE_DONATION_DEDUCT {
 		return constant.MAX_ALLOWANCE_DONATION_DEDUCT
 	}
 	return allowance
 }
+
+

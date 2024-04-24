@@ -41,5 +41,6 @@ type UpdateDeductResponse struct {
 type TaxServicePort interface{
 	CalculationTax(*TaxRequest)(*TaxResponse,error)
 	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
+	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }
 

@@ -111,3 +111,45 @@ func validatePersonalAllowanceMaximum(amount float64, errMsgs *[]string) {
 		*errMsgs = append(*errMsgs,msg)
 	}
 }
+
+
+
+func ValidateKreceiptAllowance(amount float64) error {
+	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
+	var errMsgs []string
+
+	validateKreceiptAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
+	validateKreceiptAllowanceMinimum(amount,&errMsgs)
+	validateKreceiptAllowanceMaximum(amount,&errMsgs)
+
+	if len(errMsgs) > 0 {
+		return errors.New(strings.Join(errMsgs, "; "))
+	}
+
+	return nil
+}
+
+
+
+func validateKreceiptAllowanceGreaterThanOrEqualZero(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount < 0 {
+		*errMsgs = append(*errMsgs, constant.MSG_BU_INVALID_K_RECEIPT_ALLOW_LESS_THAN_ZERO)
+	}
+}
+
+func validateKreceiptAllowanceMinimum(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount < constant.MIN_ALLOWANCE_K_RECEIPT {
+		msg := fmt.Sprintf("k-receipt deductibles start at %.2f baht", constant.MIN_ALLOWANCE_K_RECEIPT)
+		*errMsgs = append(*errMsgs,msg)
+	}
+}
+
+func validateKreceiptAllowanceMaximum(amount float64, errMsgs *[]string) {		
+	//fmt.Println("wht ",wht)
+	if amount > constant.MAX_ALLOWANCE_K_RECEIPT {
+		msg := fmt.Sprintf("Maximum k-receipt deductibles %.2f baht", constant.MAX_ALLOWANCE_K_RECEIPT)
+		*errMsgs = append(*errMsgs,msg)
+	}
+}
