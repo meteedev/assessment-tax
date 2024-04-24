@@ -21,5 +21,5 @@ const (
 	MSG_BU_INVALID_PERSONAL_ALLOW_MININUM = "Personal deductibles start at "
 
 	MSG_BU_DEDUCT_UPD_PERSONAL_FAILED = "Update personal allowance failed" 
-	
+	MSG_BU_DEDUCT_PERSONAL_CONFIG_NOT_FOUND = "personal allowance config not found in database"
 )
