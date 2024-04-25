@@ -52,7 +52,7 @@ func TestTaxCalculationsHandler(t *testing.T) {
 	mockService.On("CalculationTax", mock.Anything).Return(expectedResponse, nil)
 
 	// Call the handler method
-	err := handler.TaxCalculationsHandler(c)
+	err := handler.TaxCalculation(c)
 	assert.NoError(t, err)
 
 	// Check the response

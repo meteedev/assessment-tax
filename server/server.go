@@ -88,7 +88,8 @@ func registerRoutes(e *echo.Echo,handler *handler.TaxHandler) {
 	
 	// Tax routes
 	taxGroup := e.Group("/tax")
-	taxGroup.POST("/calculations", handler.TaxCalculationsHandler)
+	taxGroup.POST("/calculations", handler.TaxCalculation)
+	taxGroup.POST("/calculations/upload-csv", handler.TaxUploadCalculation)
 	
 
 	// Admin routes
