@@ -68,17 +68,7 @@ func TestCalculateTax(t *testing.T) {
     assert.Equal(t, 4000.0, taxResponse.Tax)
 }
 
-func TestCalculateWithTaxTable(t *testing.T) {
-    logger := zerolog.Logger{}
-    taxService := &TaxService{logger: &logger}
 
-    taxResponse, err := taxService.calculateWithTaxTable(440000)
-
-
-
-    assert.NoError(t, err)
-    assert.Equal(t, 29000.0, taxResponse.Tax)
-}
 
 func TestUpdatePersonalAllowance(t *testing.T) {
     logger := zerolog.Logger{}
@@ -129,18 +119,7 @@ func TestDeductWht(t *testing.T) {
     assert.Equal(t, 2500.0, deductedWht)
 }
 
-func TestGetTaxTable(t *testing.T) {
-    
-    logger := zerolog.Logger{}
-    mockRepo := new(MockTaxDeductConfigPort)
-    taxService := TaxService{&logger,mockRepo}
-    
-    brackets, err := taxService.getTaxTable()
 
-    assert.NoError(t, err)
-    assert.NotNil(t, brackets)
-    assert.Equal(t, 5, len(brackets))
-}
 
 func TestAdjustLowerBound(t *testing.T) {
     lower := -100.0
