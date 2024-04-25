@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/csv"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -15,7 +17,7 @@ func NewTaxHandler(service service.TaxServicePort) *TaxHandler {
 	return &TaxHandler{service: service}
 }
 
-func (h *TaxHandler) TaxCalculationsHandler(c echo.Context) error {
+func (h *TaxHandler) TaxCalculation(c echo.Context) error {
 	req := new(service.TaxRequest)
 	
 	if err := c.Bind(req); err != nil {
@@ -63,4 +65,33 @@ func (h *TaxHandler) DeductionsKreceipt(c echo.Context) error {
 
 
 	return c.JSON(http.StatusOK, updateResponse)
+}
+
+func (h *TaxHandler) TaxUploadCalculation(c echo.Context) error {	
+
+	file, err := c.FormFile("taxFile")
+	if err != nil {
+		return err
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	reader := csv.NewReader(src)
+
+	for {
+		record, err := reader.Read()
+		if err != nil {
+			break // End of file
+		}
+		// Process each CSV record as needed
+		fmt.Println(record)
+	}
+	
+	
+	return c.String(http.StatusOK, "CSV data received successfully")
+
 }
