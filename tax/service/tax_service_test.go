@@ -28,23 +28,45 @@ func (m *MockTaxDeductConfigPort) UpdateById(id string, amount float64) (int64, 
 	return 1, args.Error(1)
 }
 
-func TestCalculationTax(t *testing.T) {
+func TestCalculationTax_deduct_donation(t *testing.T) {
     logger := zerolog.Logger{}
     mockRepo := new(MockTaxDeductConfigPort)
     taxService := NewTaxService(&logger, mockRepo)
 
     incomeDetail := &TaxRequest{
         TotalIncome: 500000,
-        Allowances:  []Allowance{{AllowanceType: "donation", Amount: 200000}},
+        Allowances:  []Allowance{{AllowanceType: "donation", Amount: 200000} ,  },
         WHT:         0,
     }
 
     mockRepo.On("FindById", "personal").Return(&repository.TaxDeductConfig{Amount: 60000}, nil)
+  
 
     taxResponse, err := taxService.CalculationTax(incomeDetail)
 
     assert.NoError(t, err)
     assert.Equal(t, 19000.0, taxResponse.Tax)
+}
+
+
+func TestCalculationTax_deduct_Kreceipt(t *testing.T) {
+    logger := zerolog.Logger{}
+    mockRepo := new(MockTaxDeductConfigPort)
+    taxService := NewTaxService(&logger, mockRepo)
+
+    incomeDetail := &TaxRequest{
+        TotalIncome: 500000,
+        Allowances:  []Allowance{ {AllowanceType: "k-receipt", Amount: 200000} },
+        WHT:         0,
+    }
+
+    mockRepo.On("FindById", "k-receipt").Return(&repository.TaxDeductConfig{Amount: 50000.0}, nil)
+    mockRepo.On("FindById", "personal").Return(&repository.TaxDeductConfig{Amount: 60000.0}, nil)
+
+    taxResponse, err := taxService.CalculationTax(incomeDetail)
+
+    assert.NoError(t, err)
+    assert.Equal(t, 24000.0, taxResponse.Tax)
 }
 
 func TestCalculateTax(t *testing.T) {
@@ -172,3 +194,43 @@ func TestGetPersonalAllowance(t *testing.T) {
     assert.NoError(t, err)
     assert.Equal(t, 60000.0, amount)
 }
+
+
+
+func TestGetKreceiptAllowance(t *testing.T) {
+    // Mocking the logger
+    logger := zerolog.Logger{}
+
+    // Mocking the repository
+    mockRepo := new(MockTaxDeductConfigPort)
+    mockRepo.On("FindById", constant.DEDUCT_K_RECEIPT_ID).Return(&repository.TaxDeductConfig{Amount: 70000.0}, nil)
+
+    // Creating a TaxService instance with the mocked logger and repository
+    taxService := &TaxService{logger: &logger, DeductRepo: mockRepo}
+
+
+    // Calling the method under test
+    amount, err := taxService.getKreceiptAllowance()
+
+    // Assertions
+    assert.NoError(t, err)
+    assert.Equal(t, 70000.0, amount)
+}
+
+
+
+func TestAdjustMaximumKreceiptAllowanceDeduct(t *testing.T) {
+    
+    kreciptAllowanceRequest := 100000.0
+
+    logger := zerolog.Logger{}
+    mockRepo := new(MockTaxDeductConfigPort)
+    taxService := TaxService{&logger,mockRepo}
+
+    mockRepo.On("FindById", constant.DEDUCT_K_RECEIPT_ID).Return(&repository.TaxDeductConfig{Amount: 70000.0}, nil)
+    adjusted,err := taxService.adjustMaximumKreceiptAllowanceDeduct(kreciptAllowanceRequest)
+        
+    assert.NoError(t, err)
+    assert.Equal(t, 70000.0, adjusted)
+}
+
