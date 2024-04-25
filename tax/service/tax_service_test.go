@@ -78,7 +78,7 @@ func TestUpdatePersonalAllowance(t *testing.T) {
     updateReq := UpdateDeductRequest{Amount: 60000.0}
 
     mockRepo.On("UpdateById", constant.DEDUCT_PERSONAL_ID, 60000.0).Return(1, nil)
-    mockRepo.On("FindById", "personal").Return(&repository.TaxDeductConfig{Amount: 60000.0}, nil)
+    mockRepo.On("FindById", constant.DEDUCT_PERSONAL_ID).Return(&repository.TaxDeductConfig{Amount: 60000.0}, nil)
 
     updDeductResponse, err := taxService.UpdatePersonalAllowance(&updateReq)
 
@@ -86,6 +86,22 @@ func TestUpdatePersonalAllowance(t *testing.T) {
     assert.Equal(t, 60000.0, updDeductResponse.Amount)
 }
 
+
+func TestUpdateKreceiptAllowance(t *testing.T) {
+    logger := zerolog.Logger{}
+    mockRepo := new(MockTaxDeductConfigPort)
+    taxService := NewTaxService(&logger, mockRepo)
+
+    updateReq := UpdateDeductRequest{Amount: 60000.0}
+
+    mockRepo.On("UpdateById", constant.DEDUCT_K_RECEIPT_ID, 60000.0).Return(1, nil)
+    mockRepo.On("FindById", constant.DEDUCT_K_RECEIPT_ID).Return(&repository.TaxDeductConfig{Amount: 60000.0}, nil)
+
+    updDeductResponse, err := taxService.UpdateKreceiptAllowance(&updateReq)
+
+    assert.NoError(t, err)
+    assert.Equal(t, 60000.0, updDeductResponse.Amount)
+}
 
 
 func TestDeductPersonalAllowance(t *testing.T) {
