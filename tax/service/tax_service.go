@@ -54,18 +54,22 @@ func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error
 	}
 	t.logger.Debug().Msgf("Taxed income (%.2f) after deductAllowance", taxedIncome)
 
-	taxResponse, err := t.calculateWithTaxTable(taxedIncome)
-	if err != nil {
-		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
-	}
+	// calculate tax table
+	taxStep , totalTax := t.calculateTaxTable(taxedIncome)
+	
+	taxDiff := t.deductWht(totalTax, wht)
+	
+	taxResponse := getTaxResponse(taxDiff,taxStep)
 
-	taxDiff := t.deductWht(taxResponse.Tax, wht)
-	setUpTaxRefund(taxDiff, taxResponse)
-
-	return taxResponse, nil
+	return &taxResponse, nil
 }
 
-func setUpTaxRefund(taxDiff float64, taxResponse *TaxResponse) {
+func getTaxResponse(taxDiff float64,taxStep []TaxStep) TaxResponse {
+	
+	taxResponse := TaxResponse{
+		TaxStep: taxStep,
+	}
+
 	if taxDiff < 0 {
 		taxResponse.TaxRefund = taxDiff * (-1)
 		taxResponse.Tax = 0
@@ -73,39 +77,10 @@ func setUpTaxRefund(taxDiff float64, taxResponse *TaxResponse) {
 		taxResponse.TaxRefund = 0
 		taxResponse.Tax = taxDiff
 	}
+
+	return taxResponse
 }
 
-func (t *TaxService) calculateWithTaxTable(taxedIncome float64) (*TaxResponse, error) {
-	brackets, err := t.getTaxTable()
-	if err != nil {
-		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
-	}
-
-	var totalTax float64
-
-	for i := range brackets {
-		taxableAmount := min(taxedIncome, brackets[i].UpperBound) - brackets[i].LowerBound + 1
-		if taxableAmount > 0 {
-			taxAmount := taxableAmount * brackets[i].TaxRate
-			brackets[i].Tax = taxAmount
-			totalTax += taxAmount
-			t.logger.Debug().Msgf("bracket: %+v taxableAmount: %.2f taxAmount:%.2f totalTax:%.2f", brackets[i], taxableAmount, taxAmount, totalTax)
-		}
-
-		if taxedIncome <= brackets[i].UpperBound {
-			break
-		}
-	}
-
-	t.logger.Debug().Msgf("bracket: %+v ", brackets)
-
-	taxResponse := TaxResponse{
-		Tax:        totalTax,
-		TaxBracket: brackets,
-	}
-
-	return &taxResponse, nil
-}
 
 func (t *TaxService) UpdatePersonalAllowance(updateReq *UpdateDeductRequest) (*UpdateDeductResponse, error) {
 	amount := updateReq.Amount
@@ -231,24 +206,7 @@ func (t *TaxService) deductWht(taxAmount float64, wht float64) float64 {
 	return taxDiff
 }
 
-func (t *TaxService) getTaxTable() ([]TaxBracket, error) {
-	brackets := []TaxBracket{
-		{Level: "0-150,000", LowerBound: 0, UpperBound: 150000, TaxRate: 0.00, Tax: 0.0}, // Adjust the tax rate as needed
-		{Level: "150,001-500,000", LowerBound: 150001, UpperBound: 500000, TaxRate: 0.10, Tax: 0.0},
-		{Level: "500,001-1,000,000", LowerBound: 500001, UpperBound: 1000000, TaxRate: 0.15, Tax: 0.0},
-		{Level: "1,000,001-2,000,000", LowerBound: 1000001, UpperBound: 2000000, TaxRate: 0.20, Tax: 0.0},
-		{Level: "2,000,001 ขึ้นไป", LowerBound: 2000001, UpperBound: 0, TaxRate: 0.35, Tax: 0.0},
-	}
 
-	return brackets, nil
-}
-
-func (t *TaxService) adjustLowerBound(lower float64) float64 {
-	if lower < 0 {
-		return 0
-	}
-	return lower
-}
 
 func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) float64 {
 	if allowance > constant.MAX_ALLOWANCE_DONATION_DEDUCT {
@@ -256,3 +214,5 @@ func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) flo
 	}
 	return allowance
 }
+
+

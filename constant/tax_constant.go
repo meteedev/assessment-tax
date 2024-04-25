@@ -16,3 +16,5 @@ const (
 	DEDUCT_K_RECEIPT_ID = "k-receipt" 
 	DEDUCT_DONATION_ID = "donation"
 )
+
+

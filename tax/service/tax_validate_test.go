@@ -2,10 +2,31 @@ package service
 
 import (
 	"testing"
-
 	"github.com/stretchr/testify/assert"
-
+	"github.com/meteedev/assessment-tax/constant"
 )
+
+func TestValidateTotalIncomeGreaterThanOrEqualZero(t *testing.T) {
+    // Test case 1: amount is greater than zero
+    amount := 100.0
+    errMsgs := []string{}
+    validateTotalIncomeGreaterThanOrEqualZero(amount, &errMsgs)
+    assert.Empty(t, errMsgs, "Expected no error messages for amount greater than zero")
+
+    // Test case 2: amount is equal to zero
+    amount = 0
+    errMsgs = []string{}
+    validateTotalIncomeGreaterThanOrEqualZero(amount, &errMsgs)
+    assert.NotEmpty(t, errMsgs, "Expected error message for amount equal to zero")
+    assert.Equal(t, errMsgs[0], constant.MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO, "Incorrect error message for amount equal to zero")
+
+    // Test case 3: amount is less than zero
+    amount = -50.0
+    errMsgs = []string{}
+    validateTotalIncomeGreaterThanOrEqualZero(amount, &errMsgs)
+    assert.NotEmpty(t, errMsgs, "Expected error message for amount less than zero")
+    assert.Equal(t, errMsgs[0], constant.MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO, "Incorrect error message for amount less than zero")
+}
 
 func TestValidateTaxRequest(t *testing.T) {
 	testCases := []struct {

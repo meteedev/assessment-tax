@@ -34,6 +34,40 @@ func validateWht(wht float64,totalIncome float64,errMsgs *[]string){
 	validateWhtNotGreaterThanTotalIncome(wht,totalIncome,errMsgs)
 }
 
+
+
+func ValidateKreceiptAllowance(amount float64) error {
+	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
+	var errMsgs []string
+
+	validateKreceiptAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
+	validateKreceiptAllowanceMinimum(amount,&errMsgs)
+	validateKreceiptAllowanceMaximum(amount,&errMsgs)
+
+	if len(errMsgs) > 0 {
+		return errors.New(strings.Join(errMsgs, "; "))
+	}
+
+	return nil
+}
+
+
+func ValidatePersonaAllowance(amount float64) error {
+	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
+	var errMsgs []string
+	
+	validatePersonalAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
+	validatePersonalAllowanceMinimum(amount,&errMsgs)
+	validatePersonalAllowanceMaximum(amount,&errMsgs)
+
+	if len(errMsgs) > 0 {
+		return errors.New(strings.Join(errMsgs, "; "))
+	}
+
+	return nil
+}
+
+
 func validateWhtGreaterThanOrEqualZero(wht float64, errMsgs *[]string) {		
 	//fmt.Println("wht ",wht)
 	if wht < 0 {
@@ -75,20 +109,7 @@ func contains(arr []string, str string) bool {
 }
 
 
-func ValidatePersonaAllowance(amount float64) error {
-	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
-	var errMsgs []string
-	
-	validatePersonalAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
-	validatePersonalAllowanceMinimum(amount,&errMsgs)
-	validatePersonalAllowanceMaximum(amount,&errMsgs)
 
-	if len(errMsgs) > 0 {
-		return errors.New(strings.Join(errMsgs, "; "))
-	}
-
-	return nil
-}
 
 func validatePersonalAllowanceGreaterThanOrEqualZero(amount float64, errMsgs *[]string) {		
 	//fmt.Println("wht ",wht)
@@ -114,21 +135,6 @@ func validatePersonalAllowanceMaximum(amount float64, errMsgs *[]string) {
 }
 
 
-
-func ValidateKreceiptAllowance(amount float64) error {
-	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
-	var errMsgs []string
-
-	validateKreceiptAllowanceGreaterThanOrEqualZero(amount,&errMsgs)
-	validateKreceiptAllowanceMinimum(amount,&errMsgs)
-	validateKreceiptAllowanceMaximum(amount,&errMsgs)
-
-	if len(errMsgs) > 0 {
-		return errors.New(strings.Join(errMsgs, "; "))
-	}
-
-	return nil
-}
 
 
 
