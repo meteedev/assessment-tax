@@ -121,19 +121,6 @@ func TestDeductWht(t *testing.T) {
 
 
 
-func TestAdjustLowerBound(t *testing.T) {
-    lower := -100.0
-    logger := zerolog.Logger{}
-    mockRepo := new(MockTaxDeductConfigPort)
-    taxService := TaxService{&logger,mockRepo}
-    
-   
-
-    adjusted := taxService.adjustLowerBound(lower)
-
-    assert.Equal(t, 0.0, adjusted)
-}
-
 func TestAdjustMaximumDonationAllowanceDeduct(t *testing.T) {
     
     allowance := 2000.0

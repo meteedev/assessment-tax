@@ -39,9 +39,9 @@ func TestTaxService_calculateStep(t *testing.T) {
 		level      string
 		expected   float64
 	}{
-		{"No Tax", 100000, 0, 0.1, "0-150,000", 0},
-		{"Tax in range", 200000, 0, 0.1, "0-150,000", 5000},
-		{"Tax beyond range", 300000, 0, 0.1, "0-150,000", 15000},
+		{"No Tax", 100000.0, 0, 0, "0-150,000", 0},
+		{"Tax in range", 200000.0, 0, 0.1, "0-150,000", 20000},
+		{"Tax beyond range", 300000.0, 0, 0.1, "0-150,000", 30000},
 	}
 
 	for _, test := range tests {

@@ -1,6 +1,7 @@
 package service
 
 
+
 func (t *TaxService) getStep(level string, amount float64) TaxStep {
 	return TaxStep{Level: level, TaxAmount: amount}
 }
@@ -8,11 +9,14 @@ func (t *TaxService) getStep(level string, amount float64) TaxStep {
 func (t *TaxService) calculateStep(income, lowerBound, rate float64, level string) (float64, TaxStep) {
 	var tax float64
 	if income <= lowerBound {
+		//fmt.Printf("income:%.2f lowerBound:%.2f rate:%.2f tax:%.2f \n",income,lowerBound,rate,0.0)
 		return 0, t.getStep(level, 0)
 	}
-	
+
+
 	tax = (income - lowerBound) * rate
-	
+	//fmt.Printf("income:%.2f lowerBound:%.2f rate:%.2f tax:%.2f \n",income,lowerBound,rate,tax)
+
 	return tax, t.getStep(level, tax)
 }
 

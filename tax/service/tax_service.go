@@ -208,16 +208,11 @@ func (t *TaxService) deductWht(taxAmount float64, wht float64) float64 {
 
 
 
-func (t *TaxService) adjustLowerBound(lower float64) float64 {
-	if lower < 0 {
-		return 0
-	}
-	return lower
-}
-
 func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) float64 {
 	if allowance > constant.MAX_ALLOWANCE_DONATION_DEDUCT {
 		return constant.MAX_ALLOWANCE_DONATION_DEDUCT
 	}
 	return allowance
 }
+
+
