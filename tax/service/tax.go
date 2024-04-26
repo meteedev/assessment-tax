@@ -42,9 +42,19 @@ type UpdateDeductResponse struct {
 }
 
 
+type TaxUpload struct {
+    TotalIncome float64 `json:"totalIncome"`
+    Tax         float64 `json:"tax"`
+}
+
+type TaxUploadResponse struct {
+    Taxes []TaxUpload `json:"taxes"`
+}
+
 
 type TaxServicePort interface{
 	CalculationTax(*TaxRequest)(*TaxResponse,error)
+	UploadCalculationTax([]*TaxRequest)(*TaxUploadResponse,error)
 	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }
