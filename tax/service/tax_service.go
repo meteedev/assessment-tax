@@ -240,8 +240,9 @@ func (t *TaxService) UploadCalculationTax(taxRequests *[]TaxRequest)(*TaxUploadR
 func getTaxUpload(taxRequest *TaxRequest, taxResponse *TaxResponse) TaxUpload {
 	
 	taxUpload := TaxUpload{
-		TotalIncome:taxRequest.TotalIncome,
-		Tax:taxResponse.Tax,
+		TotalIncome: taxRequest.TotalIncome,
+		Tax: taxResponse.Tax,
+		TaxRefund: taxResponse.TaxRefund,
 	}
 
 	return taxUpload

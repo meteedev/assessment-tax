@@ -45,6 +45,7 @@ type UpdateDeductResponse struct {
 type TaxUpload struct {
     TotalIncome float64 `json:"totalIncome"`
     Tax         float64 `json:"tax"`
+	TaxRefund	float64 `json:"taxRefund"`
 }
 
 type TaxUploadResponse struct {
