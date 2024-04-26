@@ -66,16 +66,18 @@ func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error
 
 func getTaxResponse(taxDiff float64,taxStep []TaxStep) TaxResponse {
 	
+	taxDiff2Digit := roundToTwoDigitNearest(taxDiff)
+
 	taxResponse := TaxResponse{
 		TaxStep: taxStep,
 	}
 
 	if taxDiff < 0 {
-		taxResponse.TaxRefund = taxDiff * (-1)
+		taxResponse.TaxRefund = taxDiff2Digit * (-1)
 		taxResponse.Tax = 0
 	} else {
 		taxResponse.TaxRefund = 0
-		taxResponse.Tax = taxDiff
+		taxResponse.Tax = taxDiff2Digit
 	}
 
 	return taxResponse
