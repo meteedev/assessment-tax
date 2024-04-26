@@ -32,7 +32,7 @@ func (m *MockService) UpdateKreceiptAllowance(updateDeductRequest *service.Updat
 	return args.Get(0).(*service.UpdateDeductResponse), args.Error(1)
 }
 
-func (m *MockService) UploadCalculationTax(taxRequests []*service.TaxRequest)(*service.TaxUploadResponse,error){
+func (m *MockService) UploadCalculationTax(taxRequests *[]service.TaxRequest)(*service.TaxUploadResponse,error){
 	args := m.Called(taxRequests)
 	return args.Get(0).(*service.TaxUploadResponse), args.Error(1)
 }
