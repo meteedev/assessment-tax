@@ -77,11 +77,14 @@ func (h *TaxHandler) TaxUploadCalculation(c echo.Context) error {
 		return err
 	}
 
-	uploadTaxResponse , err := h.csvToTaxRequest(file)
+	taxRequests , err := h.csvToTaxRequest(file)
 
 	if err != nil {
 		return err
 	}
+
+
+	uploadTaxResponse , err := h.service.UploadCalculationTax(taxRequests)
 
 	fmt.Println(uploadTaxResponse)
 
@@ -90,7 +93,7 @@ func (h *TaxHandler) TaxUploadCalculation(c echo.Context) error {
 }
 
 
-func (h *TaxHandler) csvToTaxRequest(file *multipart.FileHeader)([]service.TaxRequest,error){
+func (h *TaxHandler) csvToTaxRequest(file *multipart.FileHeader)(*[]service.TaxRequest,error){
 	
 	src, err := file.Open()
 	if err != nil {
@@ -154,5 +157,5 @@ func (h *TaxHandler) csvToTaxRequest(file *multipart.FileHeader)([]service.TaxRe
 
 	}
 	
-	return taxRequests , nil 
+	return &taxRequests , nil 
 }

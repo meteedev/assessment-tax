@@ -215,17 +215,17 @@ func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) flo
 	return allowance
 }
 
-func (t *TaxService) UploadCalculationTax(taxRequests []*TaxRequest)(*TaxUploadResponse,error){
+func (t *TaxService) UploadCalculationTax(taxRequests *[]TaxRequest)(*TaxUploadResponse,error){
 	
 	var taxUploads []TaxUpload
-	for _ , taxRequest := range taxRequests{
-		taxResponse , err := t.CalculateTax(taxRequest)
+	for _ , taxRequest := range *taxRequests{
+		taxResponse , err := t.CalculateTax(&taxRequest)
 
 		if err != nil{
 			return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
 		}
 
-		taxUpload := getTaxUpload(taxRequest,taxResponse)
+		taxUpload := getTaxUpload(&taxRequest,taxResponse)
 		taxUploads = append(taxUploads, taxUpload)
 	}
 

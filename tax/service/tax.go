@@ -54,7 +54,7 @@ type TaxUploadResponse struct {
 
 type TaxServicePort interface{
 	CalculationTax(*TaxRequest)(*TaxResponse,error)
-	UploadCalculationTax([]*TaxRequest)(*TaxUploadResponse,error)
+	UploadCalculationTax(*[]TaxRequest)(*TaxUploadResponse,error)
 	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }
