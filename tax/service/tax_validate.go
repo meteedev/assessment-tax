@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/meteedev/assessment-tax/constant"
@@ -15,8 +16,8 @@ var validAllowanceTypes = []string{"donation", "k-receipt"}
 func ValidateTaxRequest(taxRequest *TaxRequest) error {
 	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
 	var errMsgs []string
-
-	validateTotalIncomeGreaterThanOrEqualZero(taxRequest.TotalIncome,&errMsgs)
+	
+	validateTotalIncome(taxRequest.TotalIncome,&errMsgs)
 	validateWht(taxRequest.WHT,taxRequest.TotalIncome, &errMsgs)
 	validateAllowances(taxRequest,&errMsgs)
 
@@ -27,6 +28,11 @@ func ValidateTaxRequest(taxRequest *TaxRequest) error {
 	return nil
 }
 
+
+func validateTotalIncome(totalIncome float64,errMsgs *[]string){
+	//onlyDigits(totalIncome , errMsgs)
+	validateTotalIncomeGreaterThanOrEqualZero(totalIncome,errMsgs)
+}
 
 
 func validateWht(wht float64,totalIncome float64,errMsgs *[]string){
@@ -166,4 +172,44 @@ func validateTotalIncomeGreaterThanOrEqualZero(amount float64, errMsgs *[]string
 	if amount <= 0 {
 		*errMsgs = append(*errMsgs, constant.MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO)
 	}
+}
+
+
+
+func onlyDigits(s string,errMsgs *[]string)  {
+
+	matched, err := regexp.MatchString("^[0-9]+(\\.[0-9]{2})?$", s)
+	if err != nil {
+		*errMsgs = append(*errMsgs, err.Error())
+	}
+	if !matched {
+		*errMsgs = append(*errMsgs, constant.MSG_BU_VALIDATE_DIGIT_ONLY)
+	}
+
+
+}
+
+
+func ValidateUploadTaxCsvRecord(record []string ) error {
+	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
+	var errMsgs []string
+	
+	fmt.Println("record len is ",len(record))
+
+	if len(record)!=3{
+		return errors.New(constant.MSG_BU_INVALID_CSV_RECORD_COLUMN_NUMBERS)
+	}
+
+	for _ , value :=range record {
+		
+		fmt.Println("value to check ",value)
+
+		onlyDigits(value,&errMsgs)
+		if len(errMsgs) > 0 {
+			return errors.New(strings.Join(errMsgs, "; "))
+		}
+
+	}  
+	
+	return nil
 }

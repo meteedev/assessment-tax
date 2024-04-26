@@ -2,9 +2,10 @@ package service
 
 import (
 	"encoding/csv"
+	"fmt"
+	"io"
 	"mime/multipart"
 	"strconv"
-	"fmt"
 
 	"github.com/meteedev/assessment-tax/apperrs"
 	"github.com/meteedev/assessment-tax/constant"
@@ -15,12 +16,14 @@ import (
 
 func (t *TaxService) UploadCalculationTax(file *multipart.FileHeader)(*TaxUploadResponse,error) {
 	
+	t.logger.Debug().Msg(file.Filename)
+
 	taxRequests , err  := t.csvToTaxRequest(file)
 	
 
 	if err != nil{
 		t.logger.Debug().Msg(err.Error())
-		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GENERAL_ERROR)
+		return nil, err
 	}
 
 	var taxUploads []TaxUpload
@@ -47,10 +50,15 @@ func (t *TaxService) UploadCalculationTax(file *multipart.FileHeader)(*TaxUpload
 
 func (t *TaxService) csvToTaxRequest(file *multipart.FileHeader)(*[]TaxRequest,error){
 	
+	t.logger.Debug().Msg("csvToTaxRequest")
+
 	src, err := file.Open()
+
+	t.logger.Debug().Msg("after open ")
 	if err != nil {
+		t.logger.Debug().Msg(err.Error())
 		fmt.Println(err.Error())
-		return nil,err
+		return nil, apperrs.NewBadRequestError(err.Error())
 	}
 	defer src.Close()
 
@@ -59,9 +67,10 @@ func (t *TaxService) csvToTaxRequest(file *multipart.FileHeader)(*[]TaxRequest,e
 	//Skip the first row
 	_, err = reader.Read()
     if err != nil {
-		fmt.Println(err.Error())
+		return nil, apperrs.NewBadRequestError(err.Error())
     }
 
+	t.logger.Debug().Msg("after skip row ")
 
 	var taxRequests []TaxRequest
 	var totalIncome float64
@@ -70,25 +79,35 @@ func (t *TaxService) csvToTaxRequest(file *multipart.FileHeader)(*[]TaxRequest,e
 
 	for {
 		record, err := reader.Read()
-		if err != nil {
-			break // End of file
+		if err == io.EOF { // Check for end of file
+			break
+		} else if err != nil {
+			fmt.Println("Error:", err)
+			return nil, apperrs.NewBadRequestError(err.Error())
 		}
+
 		// Process each CSV record as needed
 		fmt.Println(record)
 
+		err = ValidateUploadTaxCsvRecord(record)
+		
+		if err != nil {
+			return nil, apperrs.NewBadRequestError(err.Error())
+		}
+
 		totalIncome,err = strconv.ParseFloat(record[0], 64)
 		if err != nil {
-			break // End of file
+			return nil, apperrs.NewBadRequestError(err.Error())
 		}
 
 		wht,err = strconv.ParseFloat(record[1], 64)
 		if err != nil {
-			break // End of file
+			return nil, apperrs.NewBadRequestError(err.Error())
 		}
 		
 		donation,err = strconv.ParseFloat(record[2], 64)
 		if err != nil {
-			break // End of file
+			return nil, apperrs.NewBadRequestError(err.Error())
 		}
 
 		allowance := Allowance{
