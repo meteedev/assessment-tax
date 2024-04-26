@@ -4,9 +4,11 @@ import(
 	"mime/multipart"
 )
 
-type Allowance struct {
-	AllowanceType string  `json:"allowanceType"`
-	Amount        float64 `json:"amount"`
+type TaxServicePort interface{
+	CalculationTax(*TaxRequest)(*TaxResponse,error)
+	UploadCalculationTax(file *multipart.FileHeader)(*TaxUploadResponse,error)
+	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
+	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }
 
 type TaxRequest struct {
@@ -14,6 +16,13 @@ type TaxRequest struct {
 	WHT         float64     `json:"wht"`
 	Allowances  []Allowance `json:"allowances"`
 }
+
+type Allowance struct {
+	AllowanceType string  `json:"allowanceType"`
+	Amount        float64 `json:"amount"`
+}
+
+
 
 
 type TaxResponse struct {
@@ -57,11 +66,4 @@ type TaxUploadResponse struct {
 }
 
 
-type TaxServicePort interface{
-	CalculationTax(*TaxRequest)(*TaxResponse,error)
-	//UploadCalculationTax(*[]TaxRequest)(*TaxUploadResponse,error)
-	UploadCalculationTax(file *multipart.FileHeader)(*TaxUploadResponse,error)
-	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
-	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
-}
 

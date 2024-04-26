@@ -92,3 +92,19 @@ func TestValidateTaxRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestOnlyDigits(t *testing.T) {
+	// Initialize testify's assert package
+	assert := assert.New(t)
+
+	// Test case: string contains only digits
+	var errMsgs []string
+	onlyDigits("12345", &errMsgs)
+	assert.Empty(errMsgs, "Expected no error messages for string containing only digits")
+
+	// Test case: string contains non-digit characters
+	errMsgs = nil
+	onlyDigits("12a45", &errMsgs)
+	expectedErrMsg := constant.MSG_BU_VALIDATE_DIGIT_ONLY
+	assert.Equal([]string{expectedErrMsg}, errMsgs, "Expected error message for string containing non-digit characters")
+}
