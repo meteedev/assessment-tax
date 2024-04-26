@@ -1,5 +1,9 @@
 package service
 
+import(
+	"mime/multipart"
+)
+
 type Allowance struct {
 	AllowanceType string  `json:"allowanceType"`
 	Amount        float64 `json:"amount"`
@@ -45,6 +49,7 @@ type UpdateDeductResponse struct {
 type TaxUpload struct {
     TotalIncome float64 `json:"totalIncome"`
     Tax         float64 `json:"tax"`
+	TaxRefund	float64 `json:"taxRefund"`
 }
 
 type TaxUploadResponse struct {
@@ -54,7 +59,8 @@ type TaxUploadResponse struct {
 
 type TaxServicePort interface{
 	CalculationTax(*TaxRequest)(*TaxResponse,error)
-	UploadCalculationTax(*[]TaxRequest)(*TaxUploadResponse,error)
+	//UploadCalculationTax(*[]TaxRequest)(*TaxUploadResponse,error)
+	UploadCalculationTax(file *multipart.FileHeader)(*TaxUploadResponse,error)
 	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }

@@ -44,13 +44,13 @@ func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error
 
 	taxedIncome, err := t.deductPersonalAllowance(income)
 	if err != nil {
-		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GENERAL_ERROR)
 	}
 	t.logger.Debug().Msgf("Taxed income (%.2f) after deductPersonalAllowance", taxedIncome)
 
 	taxedIncome, err = t.deductAllowance(taxedIncome, allowances)
 	if err != nil {
-		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
+		return nil, apperrs.NewInternalServerError(constant.MSG_BU_GENERAL_ERROR)
 	}
 	t.logger.Debug().Msgf("Taxed income (%.2f) after deductAllowance", taxedIncome)
 
@@ -66,16 +66,18 @@ func (t *TaxService) CalculateTax(incomeDetail *TaxRequest) (*TaxResponse, error
 
 func getTaxResponse(taxDiff float64,taxStep []TaxStep) TaxResponse {
 	
+	taxDiff2Digit := roundToTwoDigitNearest(taxDiff)
+
 	taxResponse := TaxResponse{
 		TaxStep: taxStep,
 	}
 
 	if taxDiff < 0 {
-		taxResponse.TaxRefund = taxDiff * (-1)
+		taxResponse.TaxRefund = taxDiff2Digit * (-1)
 		taxResponse.Tax = 0
 	} else {
 		taxResponse.TaxRefund = 0
-		taxResponse.Tax = taxDiff
+		taxResponse.Tax = taxDiff2Digit
 	}
 
 	return taxResponse
@@ -215,33 +217,34 @@ func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) flo
 	return allowance
 }
 
-func (t *TaxService) UploadCalculationTax(taxRequests *[]TaxRequest)(*TaxUploadResponse,error){
+// func (t *TaxService) UploadCalculationTax(taxRequests *[]TaxRequest)(*TaxUploadResponse,error){
 	
-	var taxUploads []TaxUpload
-	for _ , taxRequest := range *taxRequests{
-		taxResponse , err := t.CalculateTax(&taxRequest)
+// 	var taxUploads []TaxUpload
+// 	for _ , taxRequest := range *taxRequests{
+// 		taxResponse , err := t.CalculateTax(&taxRequest)
 
-		if err != nil{
-			return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
-		}
+// 		if err != nil{
+// 			return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
+// 		}
 
-		taxUpload := getTaxUpload(&taxRequest,taxResponse)
-		taxUploads = append(taxUploads, taxUpload)
-	}
+// 		taxUpload := getTaxUpload(&taxRequest,taxResponse)
+// 		taxUploads = append(taxUploads, taxUpload)
+// 	}
 
-	uploadTaxResponse := TaxUploadResponse{
-		Taxes:taxUploads,
-	}
+// 	uploadTaxResponse := TaxUploadResponse{
+// 		Taxes:taxUploads,
+// 	}
 	
-	return &uploadTaxResponse , nil 
-}
+// 	return &uploadTaxResponse , nil 
+// }
 
 
 func getTaxUpload(taxRequest *TaxRequest, taxResponse *TaxResponse) TaxUpload {
 	
 	taxUpload := TaxUpload{
-		TotalIncome:taxRequest.TotalIncome,
-		Tax:taxResponse.Tax,
+		TotalIncome: taxRequest.TotalIncome,
+		Tax: taxResponse.Tax,
+		TaxRefund: taxResponse.TaxRefund,
 	}
 
 	return taxUpload
