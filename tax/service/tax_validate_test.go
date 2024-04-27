@@ -105,6 +105,6 @@ func TestOnlyDigits(t *testing.T) {
 	// Test case: string contains non-digit characters
 	errMsgs = nil
 	onlyDigits("12a45", &errMsgs)
-	expectedErrMsg := constant.MSG_BU_VALIDATE_DIGIT_ONLY
+	expectedErrMsg := constant.MSG_BU_VALIDATE_CSV_DIGIT_ONLY
 	assert.Equal([]string{expectedErrMsg}, errMsgs, "Expected error message for string containing non-digit characters")
 }

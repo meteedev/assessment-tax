@@ -14,14 +14,13 @@ const (
 // business logic message
 const (
 	MSG_BU_GENERAL_ERROR = "Sorry for the inconvenience Unavailable at this time"
-
-	MSG_BU_VALIDATE_DIGIT_ONLY = "Must only digits"
-
-	MSG_BU_INVALID_CSV_RECORD_COLUMN_NUMBERS = "Record must have only 3 columns"
-
 	
-	MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO = "totalIncome must greater than 0 "
+	MSG_BU_VALIDATE_CSV_DIGIT_ONLY = "Column data in csv must only digits"
+	MSG_BU_VALIDATE_CSV_GREATER_EQUAL_ZERO = "Column data in csv greater than or equal 0"
+	MSG_BU_INVALID_CSV_RECORD_COLUMN_NUMBERS = "Column data in csv must 3 columns"
 
+	MSG_BU_INVALID_TOTAL_INCOME_LESS_THAN_OR_EQUAL_ZERO = "totalIncome must greater than 0 "
+	
 	MSG_BU_INVALID_WHT_LESS_THAN_ZERO = "WHT must not be less than 0 "
 	MSG_BU_INVALID_WHT_GREATER_THAN_TOTALINCOME = "WHT can not greater than Total income"
 	

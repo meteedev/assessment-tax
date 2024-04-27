@@ -177,33 +177,32 @@ func validateTotalIncomeGreaterThanOrEqualZero(amount float64, errMsgs *[]string
 
 
 func onlyDigits(s string,errMsgs *[]string)  {
+	//matched, err := regexp.MatchString("^[0-9]+(\\.[0-9]{2})?$", s)
+	
+	matched, err := regexp.MatchString("^-?[0-9]+(\\.[0-9]{2})?$", s)
 
-	matched, err := regexp.MatchString("^[0-9]+(\\.[0-9]{2})?$", s)
 	if err != nil {
 		*errMsgs = append(*errMsgs, err.Error())
 	}
 	if !matched {
-		*errMsgs = append(*errMsgs, constant.MSG_BU_VALIDATE_DIGIT_ONLY)
+		*errMsgs = append(*errMsgs, constant.MSG_BU_VALIDATE_CSV_DIGIT_ONLY)
 	}
 
-
 }
+
+
 
 
 func ValidateUploadTaxCsvRecord(record []string ) error {
 	//fmt.Println("taxRequest.WHT ",taxRequest.WHT)
 	var errMsgs []string
 	
-	fmt.Println("record len is ",len(record))
-
 	if len(record)!=3{
 		return errors.New(constant.MSG_BU_INVALID_CSV_RECORD_COLUMN_NUMBERS)
 	}
 
 	for _ , value :=range record {
 		
-		fmt.Println("value to check ",value)
-
 		onlyDigits(value,&errMsgs)
 		if len(errMsgs) > 0 {
 			return errors.New(strings.Join(errMsgs, "; "))
