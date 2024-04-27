@@ -28,8 +28,13 @@ func (t *TaxService) UploadCalculationTax(file *multipart.FileHeader)(*TaxUpload
 
 	var taxUploads []TaxUpload
 	for _ , taxRequest := range *taxRequests{
-		taxResponse , err := t.CalculateTax(&taxRequest)
 
+		err := ValidateTaxRequest(&taxRequest)
+		if err != nil {
+			return nil, apperrs.NewBadRequestError(err.Error())
+		}
+
+		taxResponse , err := t.CalculateTax(&taxRequest)
 		if err != nil{
 			t.logger.Debug().Msg(err.Error())
 			return nil, apperrs.NewInternalServerError(constant.MSG_BU_GENERAL_ERROR)
@@ -50,11 +55,8 @@ func (t *TaxService) UploadCalculationTax(file *multipart.FileHeader)(*TaxUpload
 
 func (t *TaxService) csvToTaxRequest(file *multipart.FileHeader)(*[]TaxRequest,error){
 	
-	t.logger.Debug().Msg("csvToTaxRequest")
-
 	src, err := file.Open()
 
-	t.logger.Debug().Msg("after open ")
 	if err != nil {
 		t.logger.Debug().Msg(err.Error())
 		fmt.Println(err.Error())
