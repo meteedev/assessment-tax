@@ -47,7 +47,7 @@ func TestTaxCalculationsHandler(t *testing.T) {
 
 	// Create a new echo context for testing
 	e := echo.New()
-	reqBody := []byte(`{"TotalIncome":100000,"Allowances":[{"Amount":5000},{"Amount":3000}]}`)
+	reqBody := []byte(`{"totalIncome":100000,"wht":0.0,"allowances":[{"allowanceType":"donations","amount":0.0}]}`)
 	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", bytes.NewBuffer(reqBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
