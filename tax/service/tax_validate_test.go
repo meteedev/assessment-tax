@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/meteedev/assessment-tax/constant"
@@ -126,5 +127,67 @@ func TestValidateUploadTaxCsvRecord(t *testing.T) {
 	for _, test := range tests {
 		err := ValidateUploadTaxCsvRecord(test.record)
 		assert.Equal(t, test.expectedErr, err, "For record %v, expected error: %v, but got: %v", test.record, test.expectedErr, err)
+	}
+}
+
+
+func TestValidatePersonalAllowanceMinimum(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		amount     float64
+		expected   []string
+	}{
+		{
+			name:       "Amount less than minimum",
+			amount:     100,
+			expected:   []string{fmt.Sprintf("Personal deductibles start at %.2f baht", constant.MIN_ALLOWANCE_PERSONAL)},
+		},
+		{
+			name:       "Amount equal to minimum",
+			amount:     constant.MIN_ALLOWANCE_PERSONAL,
+			expected:   []string{},
+		},
+		{
+			name:       "Amount greater than minimum",
+			amount:     20000,
+			expected:    []string{},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc // capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			errMsgs := make([]string, 0)
+			validatePersonalAllowanceMinimum(tc.amount, &errMsgs)
+			assert.Equal(t, tc.expected, errMsgs)
+		})
+	}
+}
+
+
+func TestValidatePersonalAllowanceMaximum(t *testing.T) {
+	
+	tests := []struct {
+		name       string
+		amount     float64
+		expected   []string
+	}{
+		{
+			name:       "Amount exceeds maximum",
+			amount:     100001,
+			expected:   []string{fmt.Sprintf("Maximum Personal deductibles %.2f baht",  constant.MAX_ALLOWANCE_PERSONAL)},
+		},
+	
+	}
+
+	for _, tc := range tests {
+		tc := tc // capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			errMsgs := make([]string, 0)
+			validatePersonalAllowanceMaximum(tc.amount, &errMsgs)
+			assert.Equal(t, tc.expected, errMsgs)
+		})
 	}
 }

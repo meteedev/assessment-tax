@@ -1,27 +1,7 @@
 version: '3.2'
 
-networks:
-  tax-net:
-
 services:
-  tax-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "${PORT}:${PORT}"
-    environment:
-      PORT: ${PORT}
-      DATABASE_URL: ${DATABASE_URL}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-    networks:
-      - tax-net
-    depends_on:
-      tax-db:
-        condition: service_healthy
-
-  tax-db:
+  postgres:
     image: postgres:16.0
     environment:
       POSTGRES_DB: ktaxes
@@ -31,15 +11,6 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    networks:
-      - tax-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ktaxes"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-
+      
 volumes:
     pgdata:
