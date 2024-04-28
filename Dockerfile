@@ -10,9 +10,9 @@ COPY . .
 
 RUN CGO_ENABLED=0 go test -v ./...
 
-RUN go build -o ./out/wallet-app .
+RUN go build -o ./out/ktaxes-app .
 
 FROM alpine:3.16.2
-COPY --from=build-base /app/out/wallet-app /app/ktaxes-app
+COPY --from=build-base /app/out/ktaxes-app /app/ktaxes-app
 
 CMD ["/app/ktaxes-app"]
