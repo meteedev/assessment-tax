@@ -11,7 +11,7 @@ import (
 
 func NewDb() (*sql.DB, error) {
 	databaseSource := os.Getenv("DATABASE_URL")
-	log.Println(databaseSource)
+	//log.Println(databaseSource)
 	db, err := sql.Open("postgres", databaseSource)
 	if err != nil {
 		log.Fatal(err)
