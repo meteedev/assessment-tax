@@ -31,7 +31,7 @@ func New(){
 
 
 	logger := zerolog.New(os.Stdout).With().Logger()
-	logger = logger.Level(zerolog.DebugLevel)
+	logger = logger.Level(zerolog.InfoLevel)
 
 	// inject db to repository
 	taxDeductConfigRepo := repository.NewTaxDeductConfigRepo(db)
