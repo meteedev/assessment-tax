@@ -2,10 +2,11 @@ package handler
 
 import (
 	"net/http"
-	"fmt"
+	"encoding/json"
 
 	"github.com/labstack/echo/v4"
 	"github.com/meteedev/assessment-tax/tax/service"
+
 )
 
 type TaxHandler struct {
@@ -17,14 +18,21 @@ func NewTaxHandler(service service.TaxServicePort) *TaxHandler {
 }
 
 func (h *TaxHandler) TaxCalculation(c echo.Context) error {
-	req := new(service.TaxRequest)
 	
-	if err := c.Bind(req); err != nil {
+	body , err := h.validateSchema(c, TAX_REQUEST_SCHEMA) 
+	if err != nil {
 		return err
 	}
-	
-	taxResponse , err :=h.service.CalculationTax(req)
 
+	// Define a variable of type MyJSONData
+	var taxRequest service.TaxRequest
+
+	// Unmarshal the JSON data into the struct
+	if err := json.Unmarshal(body, &taxRequest); err != nil {
+		return err
+	}
+
+	taxResponse , err :=h.service.CalculationTax(&taxRequest)
 	if err != nil{
 		return err
 	}
@@ -33,36 +41,41 @@ func (h *TaxHandler) TaxCalculation(c echo.Context) error {
 }
 
 func (h *TaxHandler) DeductionsPersonal(c echo.Context) error {	
-	req := new(service.UpdateDeductRequest)
-	
-	if err := c.Bind(req); err != nil {
+
+	body , err := h.validateSchema(c, UPDATE_DEDUCT_REQUEST) 
+	if err != nil {
 		return err
 	}
 
-	updateResponse , err :=h.service.UpdatePersonalAllowance(req)
+	var deductRequest service.UpdateDeductRequest
+	if err := json.Unmarshal(body, &deductRequest); err != nil {
+		return err
+	}
 
+	updateResponse , err :=h.service.UpdatePersonalAllowance(&deductRequest)
 	if err != nil{
 		return err
 	}
-
 
 	return c.JSON(http.StatusOK, updateResponse)
 }
 
 func (h *TaxHandler) DeductionsKreceipt(c echo.Context) error {	
-	req := new(service.UpdateDeductRequest)
-	
-	if err := c.Bind(req); err != nil {
+	body , err := h.validateSchema(c, UPDATE_DEDUCT_REQUEST) 
+	if err != nil {
 		return err
 	}
 
-	updateResponse , err :=h.service.UpdateKreceiptAllowance(req)
+	var deductRequest service.UpdateDeductRequest
+	if err := json.Unmarshal(body, &deductRequest); err != nil {
+		return err
+	}
 
+	updateResponse , err :=h.service.UpdateKreceiptAllowance(&deductRequest)
 	if err != nil{
 		return err
 	}
-
-
+	
 	return c.JSON(http.StatusOK, updateResponse)
 }
 
@@ -73,9 +86,14 @@ func (h *TaxHandler) TaxUploadCalculation(c echo.Context) error {
 		return err
 	}
 
-	fmt.Println(file)
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to open file")
+	}
+	defer src.Close()
 
-	uploadTaxResponse , err := h.service.UploadCalculationTax(file)
+	uploadTaxResponse , err := h.service.UploadCalculationTax(src)
 
 	if err != nil {
 		return err

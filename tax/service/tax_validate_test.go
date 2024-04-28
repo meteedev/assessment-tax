@@ -1,9 +1,11 @@
 package service
 
 import (
+	"errors"
 	"testing"
-	"github.com/stretchr/testify/assert"
+
 	"github.com/meteedev/assessment-tax/constant"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateTotalIncomeGreaterThanOrEqualZero(t *testing.T) {
@@ -107,4 +109,22 @@ func TestOnlyDigits(t *testing.T) {
 	onlyDigits("12a45", &errMsgs)
 	expectedErrMsg := constant.MSG_BU_VALIDATE_CSV_DIGIT_ONLY
 	assert.Equal([]string{expectedErrMsg}, errMsgs, "Expected error message for string containing non-digit characters")
+}
+
+
+func TestValidateUploadTaxCsvRecord(t *testing.T) {
+	tests := []struct {
+		record     []string
+		expectedErr error
+	}{
+		{record: []string{"100", "200", "300"}, expectedErr: nil},         // Valid record
+		{record: []string{"100", "200", "not a number"}, expectedErr: errors.New(constant.MSG_BU_VALIDATE_CSV_DIGIT_ONLY)}, 
+		{record: []string{"100", "200"}, expectedErr: errors.New(constant.MSG_BU_INVALID_CSV_RECORD_COLUMN_NUMBERS)}, 
+		
+	}
+
+	for _, test := range tests {
+		err := ValidateUploadTaxCsvRecord(test.record)
+		assert.Equal(t, test.expectedErr, err, "For record %v, expected error: %v, but got: %v", test.record, test.expectedErr, err)
+	}
 }

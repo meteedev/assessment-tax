@@ -26,6 +26,3 @@ func NewDb() (*sql.DB, error) {
 
 
 
-func NewDbTest() (*sql.DB, error) {
-	return nil, nil
-}

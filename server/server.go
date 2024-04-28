@@ -36,8 +36,11 @@ func New(){
 	// inject db to repository
 	taxDeductConfigRepo := repository.NewTaxDeductConfigRepo(db)
 
+	// inject csv reader 
+	csvParser := &service.CSVParserImpl{}
+
 	// Inject the logger into TaxService
-	taxService := service.NewTaxService(&logger,taxDeductConfigRepo)
+	taxService := service.NewTaxService(&logger,taxDeductConfigRepo,csvParser)
 
 	//add service to handler
 	handler := handler.NewTaxHandler(taxService)

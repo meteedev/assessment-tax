@@ -1,21 +1,29 @@
 package service
 
 import (
-	"github.com/rs/zerolog"
+	"io"
+
 	"github.com/meteedev/assessment-tax/apperrs"
 	"github.com/meteedev/assessment-tax/constant"
 	"github.com/meteedev/assessment-tax/tax/repository"
+	"github.com/rs/zerolog"
 )
 
 type TaxService struct {
-	logger     *zerolog.Logger
-	DeductRepo repository.TaxDeductConfigPort
+	logger     	*zerolog.Logger
+	DeductRepo 	repository.TaxDeductConfigPort
+	csvParser 	CSVParser
 }
 
-func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfigPort) TaxServicePort {
+type CSVParser interface {
+	ParseCSVToTaxRequest(file io.Reader) (*[]TaxRequest, error)
+}
+
+func NewTaxService(logger *zerolog.Logger, deductRepo repository.TaxDeductConfigPort,csvParser CSVParser) TaxServicePort {
 	return &TaxService{
 		logger:     logger,
 		DeductRepo: deductRepo,
+		csvParser: csvParser,
 	}
 }
 
@@ -217,26 +225,7 @@ func (t *TaxService) adjustMaximumDonationAllowanceDeduct(allowance float64) flo
 	return allowance
 }
 
-// func (t *TaxService) UploadCalculationTax(taxRequests *[]TaxRequest)(*TaxUploadResponse,error){
-	
-// 	var taxUploads []TaxUpload
-// 	for _ , taxRequest := range *taxRequests{
-// 		taxResponse , err := t.CalculateTax(&taxRequest)
 
-// 		if err != nil{
-// 			return nil, apperrs.NewInternalServerError(constant.MSG_BU_GERNERAL_ERROR)
-// 		}
-
-// 		taxUpload := getTaxUpload(&taxRequest,taxResponse)
-// 		taxUploads = append(taxUploads, taxUpload)
-// 	}
-
-// 	uploadTaxResponse := TaxUploadResponse{
-// 		Taxes:taxUploads,
-// 	}
-	
-// 	return &uploadTaxResponse , nil 
-// }
 
 
 func getTaxUpload(taxRequest *TaxRequest, taxResponse *TaxResponse) TaxUpload {
@@ -249,3 +238,5 @@ func getTaxUpload(taxRequest *TaxRequest, taxResponse *TaxResponse) TaxUpload {
 
 	return taxUpload
 }
+
+

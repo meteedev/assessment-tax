@@ -18,3 +18,6 @@ const (
 )
 
 
+const (
+	CSV_UPLOAD_COLUMN = 3
+)
