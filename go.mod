@@ -3,6 +3,7 @@ module github.com/meteedev/assessment-tax
 go 1.22.1
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
 	github.com/rs/zerolog v1.32.0

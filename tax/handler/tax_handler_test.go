@@ -3,9 +3,11 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"mime/multipart"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"mime/multipart"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v4"
@@ -33,7 +35,7 @@ func (m *MockService) UpdateKreceiptAllowance(updateDeductRequest *service.Updat
 	return args.Get(0).(*service.UpdateDeductResponse), args.Error(1)
 }
 
-func (m *MockService) UploadCalculationTax(file *multipart.FileHeader)(*service.TaxUploadResponse,error){
+func (m *MockService) UploadCalculationTax(file io.Reader)(*service.TaxUploadResponse,error){
 	args := m.Called(file)
 	return args.Get(0).(*service.TaxUploadResponse), args.Error(1)
 }
@@ -142,4 +144,58 @@ func TestDeductionsKreceiptHandler(t *testing.T) {
 
 	// Assert that the mock service method was called with the correct arguments
 	mockService.AssertCalled(t, "UpdateKreceiptAllowance", mock.Anything)
+}
+
+func TestTaxHandler_TaxUploadCalculation(t *testing.T) {
+	// Create a new instance of the Echo framework
+	e := echo.New()
+
+	// Create a mock service
+	mockService := new(MockService)
+
+	// Create a new instance of the TaxHandler with the mock service
+	taxHandler := TaxHandler{
+		service: mockService,
+	}
+
+	// Create a mock HTTP request with a test CSV file
+	fileContents := "TotalIncome,WHT,Donation\n1000,100,50\n2000,200,100\n"
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("taxFile", "test.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.Copy(part, strings.NewReader(fileContents)); err != nil {
+		t.Fatal(err)
+	}
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	// Mock the UploadCalculationTax method of the service
+	mockResponse := &service.TaxUploadResponse{}
+	mockService.On("UploadCalculationTax", mock.Anything).Return(mockResponse, nil).Run(func(args mock.Arguments) {
+		// Assert that the file passed to the service is the same as the one received by the handler
+		file := args.Get(0).(io.Reader)
+		fileBytes, err := io.ReadAll(file)
+		assert.NoError(t, err)
+		assert.Equal(t, fileContents, string(fileBytes))
+	})
+
+	// Call the handler function
+	err = taxHandler.TaxUploadCalculation(c)
+
+	// Assert that there was no error
+	assert.NoError(t, err)
+
+	// Assert the status code is OK
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+
+	// Assert that the UploadCalculationTax method was called with the correct argument
+	mockService.AssertCalled(t, "UploadCalculationTax", mock.Anything)
 }

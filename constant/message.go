@@ -43,3 +43,8 @@ const(
 	MSG_HANDLER_ERR_VALIDATE_SCHEMA = "error validating schema"
 	MSG_HANDLER_ERR_INVALID_PAYLOAD = "invalid payload"
 )
+
+
+const(
+	MSG_UPLOAD_CSV_WRONG_FORMAT  = "csv wrong format"
+)

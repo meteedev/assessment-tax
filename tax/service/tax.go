@@ -1,12 +1,12 @@
 package service
 
-import(
-	"mime/multipart"
+import (
+	"io"
 )
 
 type TaxServicePort interface{
 	CalculationTax(*TaxRequest)(*TaxResponse,error)
-	UploadCalculationTax(file *multipart.FileHeader)(*TaxUploadResponse,error)
+	UploadCalculationTax(file io.Reader)(*TaxUploadResponse,error)
 	UpdatePersonalAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 	UpdateKreceiptAllowance(*UpdateDeductRequest)(*UpdateDeductResponse,error)
 }

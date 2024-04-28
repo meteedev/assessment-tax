@@ -86,7 +86,14 @@ func (h *TaxHandler) TaxUploadCalculation(c echo.Context) error {
 		return err
 	}
 
-	uploadTaxResponse , err := h.service.UploadCalculationTax(file)
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to open file")
+	}
+	defer src.Close()
+
+	uploadTaxResponse , err := h.service.UploadCalculationTax(src)
 
 	if err != nil {
 		return err
